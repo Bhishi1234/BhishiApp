@@ -47,9 +47,10 @@ export function AddMemberForm({ groupId }: { groupId: string }) {
           value={phone}
           onChange={(event) => setPhone(event.target.value)}
           placeholder="98765 43210"
+          required
         />
         <p className="text-xs text-muted-foreground">
-          If they create an account with this number, the group appears on their dashboard as an invite.
+          Required. They will see this group on their dashboard when they sign in with this number.
         </p>
       </div>
       {error ? (

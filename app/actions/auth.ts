@@ -40,7 +40,7 @@ export async function signUpAction(formData: FormData) {
         "Check your email to confirm the account, then sign in. For local testing, turn off Confirm email in Supabase Auth settings.",
     };
   }
-  redirect("/groups");
+  redirect("/profile?setup=1");
 }
 
 export async function signInAction(formData: FormData) {

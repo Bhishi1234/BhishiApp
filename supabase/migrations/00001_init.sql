@@ -367,11 +367,8 @@ begin
   end if;
 
   v_phone := public.normalize_in_phone(p_phone);
-  if p_phone is not null and length(trim(p_phone)) > 0 and v_phone is null then
-    raise exception 'Enter a valid 10-digit mobile number';
-  end if;
-  if v_phone is not null and length(v_phone) <> 10 then
-    raise exception 'Enter a valid 10-digit mobile number';
+  if v_phone is null or length(v_phone) <> 10 then
+    raise exception 'Mobile number is required';
   end if;
   select contribution_amount into v_amount from public.groups where id = p_group_id;
 
@@ -391,14 +388,8 @@ begin
   values (
     p_group_id,
     'member',
-    case
-      when v_phone is null then trim(p_display_name) || ' joined the group'
-      else trim(p_display_name) || ' was invited'
-    end,
-    case
-      when v_phone is null then 'Member added by the organiser.'
-      else 'They will see this group when they sign in with this mobile number.'
-    end,
+    trim(p_display_name) || ' was invited',
+    'They will see this group when they sign in with this mobile number.',
     uid,
     jsonb_build_object('member_id', new_member)
   );

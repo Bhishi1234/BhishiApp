@@ -48,7 +48,7 @@ export function AuthForm({
               required
             />
             <p className="text-xs text-muted-foreground">
-              Use the same number the organiser saved. That is how your group invite appears.
+              Use the same 10-digit number the organiser saved. Mobile number is required.
             </p>
           </div>
         </>

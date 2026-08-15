@@ -7,9 +7,9 @@ import { indianMobile } from "@/lib/format";
 
 export async function addMemberAction(groupId: string, displayName: string, phone?: string) {
   const supabase = await createClient();
-  const mobile = phone ? indianMobile(phone) : "";
-  if (phone && mobile.length !== 10) {
-    return { error: "Enter a valid 10-digit mobile number." };
+  const mobile = indianMobile(phone);
+  if (mobile.length !== 10) {
+    return { error: "Mobile number is required." };
   }
 
   const { error } = await supabase.rpc("add_group_member", {

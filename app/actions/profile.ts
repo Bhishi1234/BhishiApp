@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { indianMobile } from "@/lib/format";
 
@@ -14,10 +15,11 @@ export async function updateProfileAction(formData: FormData) {
   const fullName = String(formData.get("fullName") ?? "").trim();
   const phoneRaw = String(formData.get("phone") ?? "").trim();
   const upiId = String(formData.get("upiId") ?? "").trim();
-  const phone = phoneRaw ? indianMobile(phoneRaw) : null;
+  const phone = indianMobile(phoneRaw);
+  const setup = String(formData.get("setup") ?? "") === "1";
 
   if (fullName.length < 2) return { error: "Please enter your name." };
-  if (phone && phone.length !== 10) return { error: "Enter a valid 10-digit phone number." };
+  if (phone.length !== 10) return { error: "Mobile number is required." };
 
   const { error } = await supabase
     .from("profiles")
@@ -31,5 +33,6 @@ export async function updateProfileAction(formData: FormData) {
   if (error) return { error: error.message };
   revalidatePath("/profile");
   revalidatePath("/groups");
+  if (setup) redirect("/groups");
   return { success: true };
 }

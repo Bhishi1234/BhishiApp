@@ -74,11 +74,11 @@ export function ContributionCell({
         disabled={!canEdit}
         onClick={() => canEdit && setOpen(true)}
         className={cn(
-          "flex w-[7.75rem] shrink-0 snap-start flex-col rounded-2xl border px-3 py-3 text-left shadow-[0_8px_20px_rgba(37,99,235,0.06)] transition",
+          "flex w-[7.75rem] shrink-0 flex-col rounded-2xl border-2 px-3 py-3 text-left shadow-[0_8px_20px_rgba(37,99,235,0.06)] transition",
           paid && "border-emerald-200 bg-emerald-50",
           partialPaid && "border-amber-200 bg-amber-50",
           !paid && !partialPaid && "border-border bg-white",
-          highlight && "ring-2 ring-primary ring-offset-2",
+          highlight && "border-primary bg-[#eff6ff]",
           canEdit && "active:scale-[0.98]",
           !canEdit && "opacity-80",
         )}

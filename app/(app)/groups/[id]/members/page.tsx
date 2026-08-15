@@ -23,7 +23,7 @@ export default async function MembersPage({
         backHref={`/groups/${id}`}
         backLabel={bundle.group.name}
         title="Members"
-        subtitle="People do not need an account yet. Add a mobile number and they will see this group when they sign in with it."
+        subtitle="People do not need an account yet. Name and mobile number are required so they can see the invite when they sign in."
       />
 
       {bundle.isAdmin ? (

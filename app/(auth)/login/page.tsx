@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { BrandMark } from "@/components/brand/mark";
 import { AuthForm } from "@/components/auth/auth-form";
 import { getCurrentProfile } from "@/lib/group-data";
+import { isProfileComplete } from "@/lib/profile";
 
 export const dynamic = "force-dynamic";
 
@@ -10,8 +11,8 @@ export default async function LoginPage({
 }: {
   searchParams: Promise<{ next?: string }>;
 }) {
-  const { user } = await getCurrentProfile();
-  if (user) redirect("/groups");
+  const { user, profile } = await getCurrentProfile();
+  if (user) redirect(isProfileComplete(profile) ? "/groups" : "/profile?setup=1");
 
   const { next } = await searchParams;
   return (

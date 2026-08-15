@@ -63,8 +63,8 @@ export default async function GridPage({
           const initial = member.display_name.trim().charAt(0).toUpperCase() || "M";
 
           return (
-            <Card key={member.id} className="overflow-hidden p-0">
-              <div className="flex items-center gap-3 border-b border-border px-4 py-3">
+            <Card key={member.id} className="p-0">
+              <div className="flex items-center gap-3 border-b border-border px-5 py-4">
                 <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-secondary text-sm font-bold text-foreground">
                   {initial}
                 </span>
@@ -75,29 +75,31 @@ export default async function GridPage({
                   </p>
                 </div>
               </div>
-              <div className="flex gap-3 overflow-x-auto px-4 py-4 snap-x snap-mandatory">
-                {cycles.map((cycle) => {
-                  const contribution = rows.find((row) => row.cycle_id === cycle.id);
-                  return contribution ? (
-                    <ContributionCell
-                      key={cycle.id}
-                      contribution={contribution}
-                      groupId={group.id}
-                      canEdit={isAdmin}
-                      memberName={member.display_name}
-                      cycleNumber={cycle.cycle_number}
-                      dueDate={cycle.due_date}
-                      highlight={cycle.id === currentId}
-                    />
-                  ) : (
-                    <div
-                      key={cycle.id}
-                      className="flex w-[7.75rem] shrink-0 items-center justify-center rounded-2xl border border-dashed border-border text-sm text-muted-foreground"
-                    >
-                      —
-                    </div>
-                  );
-                })}
+              <div className="overflow-x-auto">
+                <div className="flex w-max gap-3 px-5 py-4">
+                  {cycles.map((cycle) => {
+                    const contribution = rows.find((row) => row.cycle_id === cycle.id);
+                    return contribution ? (
+                      <ContributionCell
+                        key={cycle.id}
+                        contribution={contribution}
+                        groupId={group.id}
+                        canEdit={isAdmin}
+                        memberName={member.display_name}
+                        cycleNumber={cycle.cycle_number}
+                        dueDate={cycle.due_date}
+                        highlight={cycle.id === currentId}
+                      />
+                    ) : (
+                      <div
+                        key={cycle.id}
+                        className="flex w-[7.75rem] shrink-0 items-center justify-center rounded-2xl border border-dashed border-border text-sm text-muted-foreground"
+                      >
+                        —
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </Card>
           );

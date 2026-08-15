@@ -59,7 +59,6 @@ export default async function GroupsPage() {
     countMap[row.group_id] = (countMap[row.group_id] ?? 0) + 1;
   }
 
-  const hasPhone = Boolean(profile?.phone);
   const showEmpty = groupRows.length === 0 && invites.length === 0;
   const greeting = profile?.full_name?.trim() || "there";
 
@@ -100,19 +99,6 @@ export default async function GroupsPage() {
             </p>
             <p className="mt-2 text-sm text-muted-foreground">{nextDraw.meeting.detail}</p>
           </div>
-        </Card>
-      ) : null}
-
-      {!hasPhone ? (
-        <Card className="mb-4 p-4">
-          <p className="font-semibold">Add your mobile number</p>
-          <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-            If someone added you to a Bhishi by phone, the invite appears here after you save
-            that number on your profile.
-          </p>
-          <Button asChild variant="outline" className="mt-3 w-full">
-            <Link href="/profile">Add phone in Profile</Link>
-          </Button>
         </Card>
       ) : null}
 

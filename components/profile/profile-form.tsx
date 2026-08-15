@@ -13,9 +13,11 @@ import type { Profile } from "@/lib/types";
 export function ProfileForm({
   profile,
   email,
+  setup = false,
 }: {
   profile: Profile;
   email: string | undefined;
+  setup?: boolean;
 }) {
   const [pending, setPending] = useState(false);
 
@@ -37,6 +39,7 @@ export function ProfileForm({
   return (
     <div className="space-y-6">
       <form action={onSubmit} className="space-y-4">
+        {setup ? <input type="hidden" name="setup" value="1" /> : null}
         <div className="space-y-2">
           <Label htmlFor="fullName">Name</Label>
           <Input id="fullName" name="fullName" defaultValue={profile.full_name ?? ""} required />
@@ -46,16 +49,17 @@ export function ProfileForm({
           <Input id="email" value={email ?? ""} disabled />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="phone">Phone</Label>
+          <Label htmlFor="phone">Mobile number</Label>
           <Input
             id="phone"
             name="phone"
             inputMode="numeric"
             defaultValue={profile.phone ?? ""}
             placeholder="10-digit mobile number"
+            required
           />
           <p className="text-xs text-muted-foreground">
-            Used to match group invites and WhatsApp reminders. Not used for login yet.
+            Required. This is how group invites find you, and how reminders are sent.
           </p>
         </div>
         <div className="space-y-2">
@@ -71,7 +75,7 @@ export function ProfileForm({
           </p>
         </div>
         <Button type="submit" className="w-full" disabled={pending}>
-          {pending ? "Saving…" : "Save profile"}
+          {pending ? "Saving…" : setup ? "Save and continue" : "Save profile"}
         </Button>
       </form>
 
