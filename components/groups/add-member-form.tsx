@@ -40,7 +40,7 @@ export function AddMemberForm({ groupId }: { groupId: string }) {
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="memberPhone">Phone (optional)</Label>
+        <Label htmlFor="memberPhone">Mobile number</Label>
         <Input
           id="memberPhone"
           inputMode="numeric"
@@ -48,6 +48,9 @@ export function AddMemberForm({ groupId }: { groupId: string }) {
           onChange={(event) => setPhone(event.target.value)}
           placeholder="98765 43210"
         />
+        <p className="text-xs text-muted-foreground">
+          If they create an account with this number, the group appears on their dashboard as an invite.
+        </p>
       </div>
       {error ? (
         <p className="text-sm text-destructive">{error}</p>

@@ -7,6 +7,7 @@ import type {
   GroupMember,
   GroupSettings,
   Payout,
+  PhoneInvite,
   Profile,
 } from "@/lib/types";
 
@@ -126,4 +127,13 @@ export async function getAlerts() {
     ...event,
     groupName: names[event.group_id] ?? "Group",
   }));
+}
+
+export async function getPhoneInvites() {
+  const { user, supabase } = await getCurrentProfile();
+  if (!user || !supabase) return [];
+
+  const { data, error } = await supabase.rpc("list_phone_invites");
+  if (error) return [];
+  return (data ?? []) as PhoneInvite[];
 }

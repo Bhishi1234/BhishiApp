@@ -55,7 +55,7 @@ export function ProfileForm({
             placeholder="10-digit mobile number"
           />
           <p className="text-xs text-muted-foreground">
-            Used for WhatsApp reminders and invite matching. Not used for login yet.
+            Used to match group invites and WhatsApp reminders. Not used for login yet.
           </p>
         </div>
         <div className="space-y-2">

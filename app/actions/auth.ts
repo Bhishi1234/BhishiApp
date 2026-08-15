@@ -2,26 +2,38 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { indianMobile } from "@/lib/format";
 
 export async function signUpAction(formData: FormData) {
   const supabase = await createClient();
   const fullName = String(formData.get("fullName") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
+  const phone = indianMobile(String(formData.get("phone") ?? ""));
 
   if (fullName.length < 2) return { error: "Please enter your name." };
   if (!email.includes("@")) return { error: "Please enter a valid email." };
   if (password.length < 6) return { error: "Password must be at least 6 characters." };
+  if (phone.length !== 10) return { error: "Enter the 10-digit mobile number used in the group." };
 
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
-      data: { full_name: fullName },
+      data: { full_name: fullName, phone },
     },
   });
 
   if (error) return { error: error.message };
+
+  if (data.user) {
+    await supabase.from("profiles").upsert({
+      id: data.user.id,
+      full_name: fullName,
+      phone,
+    });
+  }
+
   if (!data.session) {
     return {
       error:

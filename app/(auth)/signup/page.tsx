@@ -14,7 +14,7 @@ export default async function SignupPage() {
       <BrandMark href="/" />
       <h1 className="text-3xl font-bold tracking-tight">Create your account</h1>
       <p className="mt-2 mb-8 text-[15px] leading-relaxed text-muted-foreground">
-        Phone login comes later. Use email for now so you can start the first group register.
+        Phone login comes later. Add the same mobile number the organiser used, so invited groups show up on your dashboard.
       </p>
       <AuthForm mode="signup" />
     </div>

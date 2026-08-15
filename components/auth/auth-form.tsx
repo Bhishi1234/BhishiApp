@@ -32,10 +32,26 @@ export function AuthForm({
     <form action={onSubmit} className="space-y-4">
       <input type="hidden" name="next" value={nextPath} />
       {mode === "signup" ? (
-        <div className="space-y-2">
-          <Label htmlFor="fullName">Your name</Label>
-          <Input id="fullName" name="fullName" placeholder="e.g. Asha Patil" required />
-        </div>
+        <>
+          <div className="space-y-2">
+            <Label htmlFor="fullName">Your name</Label>
+            <Input id="fullName" name="fullName" placeholder="e.g. Asha Patil" required />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="phone">Mobile number</Label>
+            <Input
+              id="phone"
+              name="phone"
+              inputMode="numeric"
+              autoComplete="tel"
+              placeholder="10-digit number"
+              required
+            />
+            <p className="text-xs text-muted-foreground">
+              Use the same number the organiser saved. That is how your group invite appears.
+            </p>
+          </div>
+        </>
       ) : null}
       <div className="space-y-2">
         <Label htmlFor="email">Email</Label>

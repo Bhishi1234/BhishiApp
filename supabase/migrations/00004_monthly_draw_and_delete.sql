@@ -144,10 +144,13 @@ begin
       and user_id = auth.uid()
       and role = 'admin'
       and status = 'active'
-  ) then
+  )   then
     raise exception 'Only the organiser can delete this group';
   end if;
 
+  -- Payouts point at winning members. Remove cycles first so those rows
+  -- cascade away before group_members are deleted with the group.
+  delete from public.cycles where group_id = p_group_id;
   delete from public.groups where id = p_group_id;
 end;
 $$;

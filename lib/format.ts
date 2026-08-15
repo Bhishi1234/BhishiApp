@@ -39,6 +39,12 @@ export function digitsOnly(phone: string) {
   return phone.replace(/\D/g, "");
 }
 
+export function indianMobile(phone: string | null | undefined) {
+  const digits = digitsOnly(phone ?? "");
+  if (digits.length >= 10) return digits.slice(-10);
+  return digits;
+}
+
 export function formatPhone(phone: string | null | undefined) {
   if (!phone) return "—";
   const digits = digitsOnly(phone);

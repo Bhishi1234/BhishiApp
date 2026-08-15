@@ -105,7 +105,7 @@ create table public.contributions (
 create table public.payouts (
   id uuid primary key default gen_random_uuid(),
   cycle_id uuid not null unique references public.cycles (id) on delete cascade,
-  winner_member_id uuid not null references public.group_members (id),
+  winner_member_id uuid not null references public.group_members (id) on delete restrict,
   method public.payout_method not null,
   bid_discount numeric(12, 2),
   bonus_per_member numeric(12, 2),
@@ -145,6 +145,18 @@ create index contributions_member_idx on public.contributions (member_id);
 create index cycles_group_idx on public.cycles (group_id, cycle_number);
 
 -- Profile on signup
+create or replace function public.normalize_in_phone(p_phone text)
+returns text
+language sql
+immutable
+as $$
+  select case
+    when length(regexp_replace(coalesce(p_phone, ''), '\D', '', 'g')) >= 10
+      then right(regexp_replace(p_phone, '\D', '', 'g'), 10)
+    else nullif(regexp_replace(coalesce(p_phone, ''), '\D', '', 'g'), '')
+  end;
+$$;
+
 create or replace function public.handle_new_user()
 returns trigger
 language plpgsql
@@ -152,11 +164,15 @@ security definer
 set search_path = public
 as $$
 begin
-  insert into public.profiles (id, full_name)
+  insert into public.profiles (id, full_name, phone)
   values (
     new.id,
-    coalesce(new.raw_user_meta_data->>'full_name', '')
-  );
+    coalesce(new.raw_user_meta_data->>'full_name', ''),
+    public.normalize_in_phone(new.raw_user_meta_data->>'phone')
+  )
+  on conflict (id) do update
+    set full_name = coalesce(nullif(trim(excluded.full_name), ''), public.profiles.full_name),
+        phone = coalesce(excluded.phone, public.profiles.phone);
   return new;
 end;
 $$;
@@ -350,7 +366,13 @@ begin
     raise exception 'Member name is too short';
   end if;
 
-  v_phone := nullif(regexp_replace(coalesce(p_phone, ''), '\D', '', 'g'), '');
+  v_phone := public.normalize_in_phone(p_phone);
+  if p_phone is not null and length(trim(p_phone)) > 0 and v_phone is null then
+    raise exception 'Enter a valid 10-digit mobile number';
+  end if;
+  if v_phone is not null and length(v_phone) <> 10 then
+    raise exception 'Enter a valid 10-digit mobile number';
+  end if;
   select contribution_amount into v_amount from public.groups where id = p_group_id;
 
   insert into public.group_members (group_id, display_name, phone, role, status)
@@ -369,8 +391,14 @@ begin
   values (
     p_group_id,
     'member',
-    trim(p_display_name) || ' joined the group',
-    'Member added by the organiser.',
+    case
+      when v_phone is null then trim(p_display_name) || ' joined the group'
+      else trim(p_display_name) || ' was invited'
+    end,
+    case
+      when v_phone is null then 'Member added by the organiser.'
+      else 'They will see this group when they sign in with this mobile number.'
+    end,
     uid,
     jsonb_build_object('member_id', new_member)
   );
@@ -657,7 +685,7 @@ begin
     and status = 'active'
     and user_id is null
     and v_profile.phone is not null
-    and phone = v_profile.phone
+    and public.normalize_in_phone(phone) = public.normalize_in_phone(v_profile.phone)
   limit 1;
 
   if v_member is not null then
@@ -698,6 +726,143 @@ begin
   );
 
   return v_invite.group_id;
+end;
+$$;
+
+create or replace function public.list_phone_invites()
+returns table (
+  member_id uuid,
+  group_id uuid,
+  group_name text,
+  group_type public.group_type,
+  contribution_amount numeric,
+  planned_member_count int,
+  invited_as_name text,
+  organiser_name text
+)
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+declare
+  uid uuid := auth.uid();
+  v_phone text;
+begin
+  if uid is null then
+    return;
+  end if;
+
+  select public.normalize_in_phone(phone) into v_phone
+  from public.profiles
+  where id = uid;
+
+  if v_phone is null then
+    return;
+  end if;
+
+  return query
+  select distinct on (gm.id)
+    gm.id,
+    g.id,
+    g.name,
+    g.type,
+    g.contribution_amount,
+    g.planned_member_count,
+    gm.display_name,
+    coalesce(organiser.display_name, 'Organiser')
+  from public.group_members gm
+  join public.groups g on g.id = gm.group_id
+  left join public.group_members organiser
+    on organiser.group_id = gm.group_id
+    and organiser.role = 'admin'
+    and organiser.status = 'active'
+  where gm.user_id is null
+    and gm.status = 'active'
+    and public.normalize_in_phone(gm.phone) = v_phone
+    and not exists (
+      select 1
+      from public.group_members mine
+      where mine.group_id = gm.group_id
+        and mine.user_id = uid
+        and mine.status = 'active'
+    )
+  order by gm.id;
+end;
+$$;
+
+create or replace function public.claim_phone_invite(p_member_id uuid)
+returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  uid uuid := auth.uid();
+  v_phone text;
+  v_name text;
+  v_group_id uuid;
+  v_member_phone text;
+begin
+  if uid is null then
+    raise exception 'Not authenticated';
+  end if;
+
+  select public.normalize_in_phone(phone), full_name
+    into v_phone, v_name
+  from public.profiles
+  where id = uid;
+
+  if v_phone is null then
+    raise exception 'Add your mobile number in Profile first';
+  end if;
+
+  select group_id, public.normalize_in_phone(phone)
+    into v_group_id, v_member_phone
+  from public.group_members
+  where id = p_member_id
+    and status = 'active'
+  for update;
+
+  if v_group_id is null then
+    raise exception 'This invite is no longer available';
+  end if;
+  if v_member_phone is null or v_member_phone <> v_phone then
+    raise exception 'This invite is for a different mobile number';
+  end if;
+
+  if exists (
+    select 1 from public.group_members
+    where id = p_member_id and user_id is not null
+  ) then
+    raise exception 'Someone already joined this seat';
+  end if;
+
+  if exists (
+    select 1 from public.group_members
+    where group_id = v_group_id
+      and user_id = uid
+      and status = 'active'
+  ) then
+    return v_group_id;
+  end if;
+
+  update public.group_members
+  set user_id = uid,
+      display_name = coalesce(nullif(trim(v_name), ''), display_name),
+      phone = v_phone
+  where id = p_member_id;
+
+  insert into public.activity_events (group_id, kind, title, actor_id, metadata)
+  values (
+    v_group_id,
+    'member',
+    coalesce(nullif(trim(v_name), ''), 'A member') || ' joined from their invite',
+    uid,
+    jsonb_build_object('member_id', p_member_id)
+  );
+
+  return v_group_id;
 end;
 $$;
 
@@ -853,10 +1018,13 @@ begin
       and user_id = auth.uid()
       and role = 'admin'
       and status = 'active'
-  ) then
+  )   then
     raise exception 'Only the organiser can delete this group';
   end if;
 
+  -- Payouts point at winning members. Remove cycles first so those rows
+  -- cascade away before group_members are deleted with the group.
+  delete from public.cycles where group_id = p_group_id;
   delete from public.groups where id = p_group_id;
 end;
 $$;
@@ -902,4 +1070,7 @@ $$;
 
 grant execute on function public.is_group_member(uuid) to authenticated;
 grant execute on function public.is_group_admin(uuid) to authenticated;
+grant execute on function public.normalize_in_phone(text) to authenticated;
+grant execute on function public.list_phone_invites() to authenticated;
+grant execute on function public.claim_phone_invite(uuid) to authenticated;
 grant execute on function public.get_invite_preview(text) to anon, authenticated;

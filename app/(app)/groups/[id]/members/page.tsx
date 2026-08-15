@@ -23,7 +23,7 @@ export default async function MembersPage({
         backHref={`/groups/${id}`}
         backLabel={bundle.group.name}
         title="Members"
-        subtitle={`${bundle.members.length} of ${bundle.group.planned_member_count} seats. People can be added by name before they create an account.`}
+        subtitle="People do not need an account yet. Add a mobile number and they will see this group when they sign in with it."
       />
 
       {bundle.isAdmin ? (

@@ -100,3 +100,14 @@ export type GroupSettings = {
   reminder_days_before: number;
   self_serve_paid: boolean;
 };
+
+export type PhoneInvite = {
+  member_id: string;
+  group_id: string;
+  group_name: string;
+  group_type: GroupType;
+  contribution_amount: number | string;
+  planned_member_count: number;
+  invited_as_name: string;
+  organiser_name: string;
+};

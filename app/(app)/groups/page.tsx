@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { HowBhishiWorks } from "@/components/groups/how-bhishi-works";
+import { PhoneInviteCard } from "@/components/groups/phone-invite-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -7,6 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { PageHeader } from "@/components/layout/page-header";
 import { getMeetingState } from "@/lib/cycle";
 import { formatRupees, groupTypeHindi, groupTypeLabel } from "@/lib/format";
+import { getCurrentProfile, getPhoneInvites } from "@/lib/group-data";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
 import type { Cycle, Group, Payout } from "@/lib/types";
 import { Plus } from "lucide-react";
@@ -24,10 +26,11 @@ export default async function GroupsPage() {
   }
 
   const supabase = await createClient();
-  const { data: groups } = await supabase
-    .from("groups")
-    .select("*")
-    .order("created_at", { ascending: false });
+  const [{ profile }, invites, { data: groups }] = await Promise.all([
+    getCurrentProfile(),
+    getPhoneInvites(),
+    supabase.from("groups").select("*").order("created_at", { ascending: false }),
+  ]);
 
   const groupRows = (groups ?? []) as Group[];
   const groupIds = groupRows.map((group) => group.id);
@@ -57,6 +60,9 @@ export default async function GroupsPage() {
     countMap[row.group_id] = (countMap[row.group_id] ?? 0) + 1;
   }
 
+  const hasPhone = Boolean(profile?.phone);
+  const showEmpty = groupRows.length === 0 && invites.length === 0;
+
   return (
     <div className="px-5 py-6">
       <PageHeader
@@ -65,7 +71,31 @@ export default async function GroupsPage() {
         subtitle="Monthly hapta, meeting-day chitthi, and who has already received the pool."
       />
 
-      {groupRows.length === 0 ? (
+      {!hasPhone ? (
+        <Card className="mb-4 p-4">
+          <p className="font-semibold">Add your mobile number</p>
+          <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+            If someone added you to a Bhishi by phone, the invite appears here after you save
+            that number on your profile.
+          </p>
+          <Button asChild variant="outline" className="mt-3 w-full">
+            <Link href="/profile">Add phone in Profile</Link>
+          </Button>
+        </Card>
+      ) : null}
+
+      {invites.length > 0 ? (
+        <div className="mb-6 space-y-3">
+          <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
+            Invited to join
+          </h2>
+          {invites.map((invite) => (
+            <PhoneInviteCard key={invite.member_id} invite={invite} />
+          ))}
+        </div>
+      ) : null}
+
+      {showEmpty ? (
         <div className="space-y-4">
           <Card className="overflow-hidden p-0">
             <div className="bg-primary px-5 py-5 text-primary-foreground">
@@ -83,8 +113,13 @@ export default async function GroupsPage() {
           </Card>
           <HowBhishiWorks compact />
         </div>
-      ) : (
+      ) : groupRows.length > 0 ? (
         <div className="space-y-3">
+          {invites.length > 0 ? (
+            <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
+              Your groups
+            </h2>
+          ) : null}
           {groupRows.map((group) => {
             const groupCycles = cycles.filter((cycle) => cycle.group_id === group.id);
             const groupPayouts = payouts.filter((payout) =>
@@ -139,7 +174,7 @@ export default async function GroupsPage() {
             );
           })}
         </div>
-      )}
+      ) : null}
 
       <Link
         href="/groups/new"
