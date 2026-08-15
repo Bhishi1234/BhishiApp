@@ -1,10 +1,17 @@
+import { redirect } from "next/navigation";
 import { AuthForm } from "@/components/auth/auth-form";
+import { getCurrentProfile } from "@/lib/group-data";
+
+export const dynamic = "force-dynamic";
 
 export default async function LoginPage({
   searchParams,
 }: {
   searchParams: Promise<{ next?: string }>;
 }) {
+  const { user } = await getCurrentProfile();
+  if (user) redirect("/groups");
+
   const { next } = await searchParams;
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-lg flex-col justify-center px-5 py-10">
