@@ -1,13 +1,16 @@
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
 import { CreateWizard } from "@/components/groups/create-wizard";
+import { PageHeader } from "@/components/layout/page-header";
 
 export default function NewGroupPage() {
   return (
     <div className="px-5 py-6">
-      <Link href="/groups" className="mb-5 inline-flex items-center gap-2 text-sm font-semibold">
-        <ArrowLeft className="size-4" /> Back
-      </Link>
+      <PageHeader
+        backHref="/groups"
+        backLabel="Groups"
+        kicker="नवीन भिशी"
+        title="Create a group"
+        subtitle="Set hapta, members, and the first meeting date. The chitthi stays locked until that day."
+      />
       <CreateWizard />
     </div>
   );

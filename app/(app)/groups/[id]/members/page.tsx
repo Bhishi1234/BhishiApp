@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
 import { AddMemberForm } from "@/components/groups/add-member-form";
+import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { PageHeader } from "@/components/layout/page-header";
 import { formatPhone } from "@/lib/format";
 import { getGroupBundle } from "@/lib/group-data";
 
@@ -15,18 +15,20 @@ export default async function MembersPage({
   const bundle = await getGroupBundle(id);
   if (!bundle) notFound();
 
+  const wonIds = new Set(bundle.payouts.map((row) => row.winner_member_id));
+
   return (
     <div className="px-5 py-6">
-      <Link href={`/groups/${id}`} className="mb-5 inline-flex items-center gap-2 text-sm font-semibold">
-        <ArrowLeft className="size-4" /> {bundle.group.name}
-      </Link>
-      <h1 className="text-3xl font-bold">Members</h1>
-      <p className="mt-2 text-muted-foreground">
-        People do not need an account yet. Add them by name, then share the invite.
-      </p>
+      <PageHeader
+        backHref={`/groups/${id}`}
+        backLabel={bundle.group.name}
+        title="Members"
+        subtitle={`${bundle.members.length} of ${bundle.group.planned_member_count} seats. People can be added by name before they create an account.`}
+      />
 
       {bundle.isAdmin ? (
-        <Card className="mt-5 p-5">
+        <Card className="p-5">
+          <p className="mb-3 text-sm font-semibold">Add someone to the register</p>
           <AddMemberForm groupId={id} />
         </Card>
       ) : null}
@@ -39,10 +41,17 @@ export default async function MembersPage({
                 <p className="font-semibold">{member.display_name}</p>
                 <p className="text-sm text-muted-foreground">{formatPhone(member.phone)}</p>
               </div>
-              <p className="text-xs font-semibold capitalize text-muted-foreground">
-                {member.role.replace("_", " ")}
-                {member.user_id ? "" : " · not joined yet"}
-              </p>
+              <div className="flex flex-col items-end gap-1">
+                {wonIds.has(member.id) ? (
+                  <Badge className="bg-accent text-accent-foreground">Received pool</Badge>
+                ) : (
+                  <Badge>Still eligible</Badge>
+                )}
+                <p className="text-xs font-semibold capitalize text-muted-foreground">
+                  {member.role.replace("_", " ")}
+                  {member.user_id ? "" : " · invited"}
+                </p>
+              </div>
             </div>
           </Card>
         ))}

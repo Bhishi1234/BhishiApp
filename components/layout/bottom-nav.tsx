@@ -15,7 +15,7 @@ export function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="safe-bottom fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 backdrop-blur">
+    <nav className="safe-bottom fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/90 shadow-[0_-8px_24px_rgba(80,40,10,0.06)] backdrop-blur-md">
       <div className="mx-auto grid max-w-lg grid-cols-3">
         {tabs.map((tab) => {
           const active = pathname === tab.href || pathname.startsWith(`${tab.href}/`);
@@ -25,11 +25,18 @@ export function BottomNav() {
               key={tab.href}
               href={tab.href}
               className={cn(
-                "flex min-h-16 flex-col items-center justify-center gap-1 text-xs font-semibold",
+                "flex min-h-16 flex-col items-center justify-center gap-1 text-[11px] font-semibold tracking-wide uppercase",
                 active ? "text-primary" : "text-muted-foreground",
               )}
             >
-              <Icon className="size-6" />
+              <span
+                className={cn(
+                  "flex size-9 items-center justify-center rounded-full",
+                  active ? "bg-primary/10" : "bg-transparent",
+                )}
+              >
+                <Icon className="size-6" />
+              </span>
               {tab.label}
             </Link>
           );

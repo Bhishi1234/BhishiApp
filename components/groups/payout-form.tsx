@@ -26,7 +26,7 @@ export function PayoutForm({ cycleId, groupId }: { cycleId: string; groupId: str
         placeholder="UPI reference (optional)"
       />
       <Button variant="outline" className="w-full" disabled={pending} onClick={save}>
-        Mark payout sent
+        {pending ? "Saving…" : "Mark pool as handed over"}
       </Button>
     </div>
   );

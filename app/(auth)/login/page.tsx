@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { BrandMark } from "@/components/brand/mark";
 import { AuthForm } from "@/components/auth/auth-form";
 import { getCurrentProfile } from "@/lib/group-data";
 
@@ -15,9 +16,10 @@ export default async function LoginPage({
   const { next } = await searchParams;
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-lg flex-col justify-center px-5 py-10">
-      <h1 className="text-3xl font-bold">Welcome back</h1>
-      <p className="mt-2 mb-8 text-muted-foreground">
-        Sign in to see your groups, payments, and alerts.
+      <BrandMark href="/" />
+      <h1 className="text-3xl font-bold tracking-tight">Welcome back</h1>
+      <p className="mt-2 mb-8 text-[15px] leading-relaxed text-muted-foreground">
+        Sign in to see hapta, meeting dates, and who has already received the pool.
       </p>
       <AuthForm mode="login" nextPath={next || "/groups"} />
     </div>

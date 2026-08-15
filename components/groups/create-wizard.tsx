@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { formatRupees } from "@/lib/format";
+import { localISODate } from "@/lib/dates";
 import type { CycleFrequency, GroupType } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -22,13 +23,13 @@ const types: {
     id: "lucky_draw",
     title: "Lucky Draw",
     hindi: "चिठ्ठी भिशी",
-    description: "One member is picked at random each cycle.",
+    description: "On meeting day, one chitthi is drawn. That person takes the pool. Past winners stay out.",
   },
   {
     id: "bidding",
     title: "Bidding",
     hindi: "लिलाव भिशी",
-    description: "Lowest bid wins the pool. Discount is shared.",
+    description: "Members bid a discount. Lowest bid wins. Lilav screen comes after lucky-draw is solid.",
   },
   {
     id: "loan",
@@ -46,9 +47,7 @@ export function CreateWizard() {
   const [amount, setAmount] = useState("");
   const [memberCount, setMemberCount] = useState("10");
   const [frequency, setFrequency] = useState<CycleFrequency>("monthly");
-  const [startDate, setStartDate] = useState(
-    new Date().toISOString().slice(0, 10),
-  );
+  const [startDate, setStartDate] = useState(localISODate());
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
@@ -81,7 +80,10 @@ export function CreateWizard() {
 
       {step === 1 ? (
         <div className="space-y-3">
-          <h1 className="text-2xl font-bold">What kind of group is this?</h1>
+          <h1 className="text-2xl font-bold">How will this Bhishi run?</h1>
+          <p className="text-[15px] leading-relaxed text-muted-foreground">
+            Informal groups usually pick a name from a box each month. Bidding (lilav) is the other common style.
+          </p>
           {types.map((item) => (
             <button
               key={item.id}
@@ -121,8 +123,11 @@ export function CreateWizard() {
 
       {step === 3 ? (
         <div className="space-y-3">
-          <h1 className="text-2xl font-bold">How much each cycle?</h1>
-          <Label htmlFor="amount">Monthly amount</Label>
+          <h1 className="text-2xl font-bold">What is the monthly hapta?</h1>
+          <p className="text-[15px] leading-relaxed text-muted-foreground">
+            Every member pays this amount each month, including people who have already received the pool.
+          </p>
+          <Label htmlFor="amount">Hapta amount</Label>
           <div className="relative">
             <span className="absolute top-1/2 left-4 -translate-y-1/2 font-semibold">₹</span>
             <Input
@@ -139,7 +144,7 @@ export function CreateWizard() {
 
       {step === 4 ? (
         <div className="space-y-4">
-          <h1 className="text-2xl font-bold">Group settings</h1>
+          <h1 className="text-2xl font-bold">Members and meeting day</h1>
           <div className="space-y-2">
             <Label htmlFor="count">How many members?</Label>
             <Input
@@ -149,11 +154,12 @@ export function CreateWizard() {
               onChange={(event) => setMemberCount(event.target.value.replace(/\D/g, ""))}
             />
             <p className="text-sm text-muted-foreground">
-              We will create this many rounds. You can add people one by one after this.
+              Members equal months. {countNumber || 10} people means {countNumber || 10} monthly
+              meetings — one chitthi each month, never two in the same month.
             </p>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="start">Start date</Label>
+            <Label htmlFor="start">First meeting date</Label>
             <Input
               id="start"
               type="date"
@@ -162,7 +168,7 @@ export function CreateWizard() {
             />
           </div>
           <div className="space-y-2">
-            <Label>Cycle</Label>
+            <Label>How often do you meet?</Label>
             <div className="grid grid-cols-2 gap-2">
               {(["monthly", "weekly"] as const).map((item) => (
                 <button
@@ -183,9 +189,10 @@ export function CreateWizard() {
           </div>
           {amountNumber > 0 && countNumber > 0 ? (
             <Card className="p-4 text-sm">
-              Pool each cycle:{" "}
+              Monthly pool:{" "}
               <strong>{formatRupees(amountNumber * countNumber)}</strong> when
-              all {countNumber} members have joined.
+              all {countNumber} members have joined. The chitthi can be drawn
+              only on or after each due date.
             </Card>
           ) : null}
         </div>

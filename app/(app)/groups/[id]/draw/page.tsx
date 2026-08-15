@@ -1,8 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
 import { LuckyDraw } from "@/components/groups/lucky-draw";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { PageHeader } from "@/components/layout/page-header";
+import { getMeetingState } from "@/lib/cycle";
+import { formatDate } from "@/lib/format";
 import { getGroupBundle } from "@/lib/group-data";
 
 export default async function DrawPage({
@@ -15,60 +18,74 @@ export default async function DrawPage({
   if (!bundle) notFound();
 
   const { group, members, cycles, payouts, isAdmin } = bundle;
-  const current =
-    cycles.find((cycle) => cycle.status === "open") ??
-    cycles.find((cycle) => cycle.status === "drawn");
+  const meeting = getMeetingState(cycles, payouts, group.frequency);
+  const current = meeting.cycle;
   const wonIds = new Set(payouts.map((row) => row.winner_member_id));
   const eligible = members.filter((member) => !wonIds.has(member.id));
   const alreadyWon = members
     .filter((member) => wonIds.has(member.id))
     .map((member) => member.display_name);
-  const existing = payouts.find((row) => row.cycle_id === current?.id);
+  const existing = current ? payouts.find((row) => row.cycle_id === current.id) : undefined;
   const winner = members.find((member) => member.id === existing?.winner_member_id);
 
   return (
     <div className="px-5 py-6">
-      <Link href={`/groups/${id}`} className="mb-5 inline-flex items-center gap-2 text-sm font-semibold">
-        <ArrowLeft className="size-4" /> {group.name}
-      </Link>
-      <h1 className="text-3xl font-bold">
-        {group.type === "lucky_draw" ? "Lucky draw" : "Bidding"}
-      </h1>
+      <PageHeader
+        backHref={`/groups/${id}`}
+        backLabel={group.name}
+        kicker="चिठ्ठी"
+        title={group.type === "lucky_draw" ? "Monthly chitthi" : "Bidding"}
+        subtitle="One name is drawn each month. Anyone who has already received the pool stays out."
+      />
 
       {group.type !== "lucky_draw" ? (
-        <Card className="mt-5 p-5">
+        <Card className="p-5">
           <h2 className="text-xl font-semibold">Bidding comes next</h2>
           <p className="mt-2 text-muted-foreground">
-            This group is set up for bidding. You can already track members and
-            payments. The bid screen will be added after the lucky-draw loop is
-            working for you.
+            Track hapta here for now. The lilav screen will be added after the lucky-draw month loop is solid.
           </p>
         </Card>
       ) : members.length < 2 ? (
-        <Card className="mt-5 p-5">
-          Add at least 1 more member before starting a round.
+        <Card className="p-5">
+          Add at least one more member before the first meeting.
+          <Button asChild className="mt-4 w-full">
+            <Link href={`/groups/${id}/members`}>Add members</Link>
+          </Button>
         </Card>
       ) : existing ? (
-        <Card className="mt-5 p-5">
-          <p className="text-sm text-muted-foreground">Round {current?.cycle_number} winner</p>
-          <p className="mt-2 text-3xl font-bold">{winner?.display_name}</p>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Locked in. People who already received the pool are excluded next time.
+        <Card className="p-5 text-center">
+          <p className="text-sm font-semibold text-primary">Month {current?.cycle_number} locked</p>
+          <p className="mt-2 text-4xl font-bold">{winner?.display_name}</p>
+          <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
+            This month&apos;s chitthi is done. The next draw opens on the next due date —
+            not before.
           </p>
         </Card>
+      ) : !meeting.canDraw ? (
+        <Card className="p-5">
+          <p className="text-sm font-semibold text-primary">{meeting.label}</p>
+          <h2 className="mt-2 text-2xl font-bold">Due {formatDate(current?.due_date)}</h2>
+          <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
+            In a traditional Bhishi the chitthi is drawn at the monthly meeting, after
+            hapta is collected. The app follows that: one draw per month, only on or
+            after the due date.
+          </p>
+          <Button asChild variant="outline" className="mt-4 w-full">
+            <Link href={`/groups/${id}/grid`}>Mark this month&apos;s hapta</Link>
+          </Button>
+        </Card>
       ) : !isAdmin ? (
-        <Card className="mt-5 p-5">Only the organiser can run the draw.</Card>
+        <Card className="p-5">Only the organiser can draw the chitthi on meeting day.</Card>
       ) : !current ? (
-        <Card className="mt-5 p-5">No open round right now.</Card>
+        <Card className="p-5">No open month right now.</Card>
       ) : (
-        <div className="mt-5">
-          <LuckyDraw
-            cycleId={current.id}
-            groupId={group.id}
-            eligible={eligible}
-            alreadyWon={alreadyWon}
-          />
-        </div>
+        <LuckyDraw
+          cycleId={current.id}
+          groupId={group.id}
+          cycleNumber={current.cycle_number}
+          eligible={eligible}
+          alreadyWon={alreadyWon}
+        />
       )}
     </div>
   );

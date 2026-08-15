@@ -1,4 +1,5 @@
 import { AlertsFeed } from "@/components/alerts/alerts-feed";
+import { PageHeader } from "@/components/layout/page-header";
 import { getAlerts } from "@/lib/group-data";
 
 export default async function AlertsPage({
@@ -11,10 +12,11 @@ export default async function AlertsPage({
 
   return (
     <div className="px-5 py-6">
-      <h1 className="text-3xl font-bold">Alerts</h1>
-      <p className="mt-2 text-muted-foreground">
-        Activity from all your groups. Nothing is sent automatically.
-      </p>
+      <PageHeader
+        kicker="सूचना"
+        title="Alerts"
+        subtitle="Winners, hapta, and member changes from your groups. Nothing is sent automatically."
+      />
       <AlertsFeed events={events} filter={filter ?? "all"} />
     </div>
   );

@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
 import { StatementButton } from "@/components/groups/statement-button";
+import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { PageHeader } from "@/components/layout/page-header";
 import { formatRupees } from "@/lib/format";
 import { getGroupBundle } from "@/lib/group-data";
 
@@ -19,22 +19,19 @@ export default async function ReportsPage({
 
   return (
     <div className="px-5 py-6">
-      <Link href={`/groups/${id}`} className="mb-5 inline-flex items-center gap-2 text-sm font-semibold">
-        <ArrowLeft className="size-4" /> {group.name}
-      </Link>
-      <h1 className="text-3xl font-bold">Reports</h1>
-      <p className="mt-2 text-muted-foreground">
-        A simple statement for the group register. Not a bank statement.
-      </p>
+      <PageHeader
+        backHref={`/groups/${id}`}
+        backLabel={group.name}
+        title="Member statements"
+        subtitle="A notebook summary for the group. This is not a bank statement."
+      />
 
-      <div className="mt-5">
-        <StatementButton
-          group={group}
-          members={members}
-          cycles={cycles}
-          contributions={contributions}
-        />
-      </div>
+      <StatementButton
+        group={group}
+        members={members}
+        cycles={cycles}
+        contributions={contributions}
+      />
 
       <div className="mt-5 space-y-3">
         {members.map((member) => {
@@ -43,12 +40,17 @@ export default async function ReportsPage({
           const won = payouts.some((row) => row.winner_member_id === member.id);
           return (
             <Card key={member.id} className="p-4">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-3">
                 <p className="font-semibold">{member.display_name}</p>
-                {won ? <span className="text-xs font-semibold text-primary">Received pool</span> : null}
+                {won ? (
+                  <Badge className="bg-accent text-accent-foreground">Received pool</Badge>
+                ) : (
+                  <Badge>Waiting for turn</Badge>
+                )}
               </div>
               <p className="mt-1 text-sm text-muted-foreground">
-                {paid} / {rows.length} cycles paid · {formatRupees(rows.reduce((sum, row) => sum + Number(row.amount_paid), 0))}
+                {paid} / {rows.length} months paid ·{" "}
+                {formatRupees(rows.reduce((sum, row) => sum + Number(row.amount_paid), 0))}
               </p>
             </Card>
           );

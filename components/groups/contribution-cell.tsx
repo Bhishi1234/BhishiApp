@@ -62,9 +62,9 @@ export function ContributionCell({
       {open ? (
         <div className="fixed inset-0 z-50 flex items-end bg-black/40 p-4">
           <div className="w-full rounded-2xl bg-card p-5">
-            <h3 className="text-lg font-semibold">Update payment</h3>
+            <h3 className="text-lg font-semibold">Update hapta</h3>
             <p className="mt-1 text-sm text-muted-foreground">
-              Due {formatRupees(contribution.amount_due)}. Money is paid outside the app.
+              Due {formatRupees(contribution.amount_due)}. Mark the register only — money is paid outside the app.
             </p>
             <div className="mt-4 grid grid-cols-3 gap-2">
               {(["upi", "cash", "bank_transfer"] as const).map((item) => (

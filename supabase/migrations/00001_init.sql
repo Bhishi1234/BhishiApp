@@ -465,13 +465,16 @@ declare
   v_winner_name text;
   v_eligible uuid[];
   v_member_count int;
+  v_due date;
+  v_cycle_number int;
+  v_today date := (timezone('Asia/Kolkata', now()))::date;
 begin
   if uid is null then
     raise exception 'Not authenticated';
   end if;
 
-  select c.group_id, g.type
-    into v_group_id, v_type
+  select c.group_id, g.type, c.due_date, c.cycle_number
+    into v_group_id, v_type, v_due, v_cycle_number
   from public.cycles c
   join public.groups g on g.id = c.group_id
   where c.id = p_cycle_id;
@@ -486,7 +489,19 @@ begin
     raise exception 'Only an organiser can run the draw';
   end if;
   if exists (select 1 from public.payouts where cycle_id = p_cycle_id) then
-    raise exception 'This round already has a winner';
+    raise exception 'This month already has a winner. Next chitthi is next month.';
+  end if;
+  if v_due > v_today then
+    raise exception 'Chitthi can be drawn only on or after %. One draw each month.', to_char(v_due, 'DD Mon YYYY');
+  end if;
+  if exists (
+    select 1
+    from public.cycles
+    where group_id = v_group_id
+      and cycle_number < v_cycle_number
+      and status not in ('drawn', 'paid_out', 'closed')
+  ) then
+    raise exception 'Finish the previous month first';
   end if;
 
   select count(*) into v_member_count
@@ -524,12 +539,6 @@ begin
 
   update public.cycles set status = 'drawn' where id = p_cycle_id;
 
-  update public.cycles
-  set status = 'open'
-  where group_id = v_group_id
-    and status = 'upcoming'
-    and cycle_number = (select cycle_number + 1 from public.cycles where id = p_cycle_id);
-
   if not exists (
     select 1
     from public.group_members gm
@@ -550,8 +559,8 @@ begin
   values (
     v_group_id,
     'winner',
-    v_winner_name || ' won the lucky draw',
-    'Winner locked for this round.',
+    v_winner_name || ' won this month''s chitthi',
+    'Winner locked. Next draw opens on the next due date.',
     uid,
     jsonb_build_object(
       'cycle_id', p_cycle_id,
@@ -827,6 +836,31 @@ create policy bids_select on public.bids
 create policy activity_select on public.activity_events
   for select using (public.is_group_member(group_id));
 
+create or replace function public.delete_group(p_group_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if auth.uid() is null then
+    raise exception 'Not authenticated';
+  end if;
+  if not exists (
+    select 1
+    from public.group_members
+    where group_id = p_group_id
+      and user_id = auth.uid()
+      and role = 'admin'
+      and status = 'active'
+  ) then
+    raise exception 'Only the organiser can delete this group';
+  end if;
+
+  delete from public.groups where id = p_group_id;
+end;
+$$;
+
 grant usage on schema public to authenticated;
 grant select, insert, update on public.profiles to authenticated;
 grant select on public.groups to authenticated;
@@ -843,6 +877,7 @@ grant execute on function public.create_group(text, public.group_type, numeric, 
 grant execute on function public.add_group_member(uuid, text, text) to authenticated;
 grant execute on function public.update_contribution_status(uuid, public.contribution_status, numeric, public.payment_mode) to authenticated;
 grant execute on function public.run_lucky_draw(uuid) to authenticated;
+grant execute on function public.delete_group(uuid) to authenticated;
 grant execute on function public.create_group_invite(uuid) to authenticated;
 grant execute on function public.accept_invite(text) to authenticated;
 grant execute on function public.mark_payout_sent(uuid, text) to authenticated;

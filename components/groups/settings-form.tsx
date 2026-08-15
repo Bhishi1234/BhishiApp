@@ -35,13 +35,13 @@ export function SettingsForm({
     <form action={onSubmit} className="space-y-4">
       <input type="hidden" name="groupId" value={groupId} />
       <div className="space-y-2">
-        <Label htmlFor="lateFeeNotes">Late fee notes</Label>
+        <Label htmlFor="lateFeeNotes">Late hapta notes</Label>
         <Textarea
           id="lateFeeNotes"
           name="lateFeeNotes"
           defaultValue={lateFeeNotes}
           disabled={!canEdit}
-          placeholder="e.g. ₹50 after the 5th of the month. Not enforced by the app."
+          placeholder="e.g. ₹50 after the 5th. The app will not collect this."
         />
       </div>
       <div className="space-y-2">

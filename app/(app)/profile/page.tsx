@@ -1,3 +1,4 @@
+import { PageHeader } from "@/components/layout/page-header";
 import { ProfileForm } from "@/components/profile/profile-form";
 import { getCurrentProfile } from "@/lib/group-data";
 
@@ -14,10 +15,11 @@ export default async function ProfilePage() {
 
   return (
     <div className="px-5 py-6">
-      <h1 className="text-3xl font-bold">Profile</h1>
-      <p className="mt-2 mb-6 text-muted-foreground">
-        Your details stay with this account. They are not used to move money.
-      </p>
+      <PageHeader
+        kicker="खाते"
+        title="Your profile"
+        subtitle="Shown on invites and WhatsApp reminders. The app never uses this to send money."
+      />
       <ProfileForm profile={profile} email={user.email} />
     </div>
   );

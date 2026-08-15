@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
 import { ContributionCell } from "@/components/groups/contribution-cell";
+import { PageHeader } from "@/components/layout/page-header";
+import { formatDayMonth } from "@/lib/format";
 import { getGroupBundle } from "@/lib/group-data";
 
 export default async function GridPage({
@@ -17,22 +17,24 @@ export default async function GridPage({
 
   return (
     <div className="px-5 py-6">
-      <Link href={`/groups/${id}`} className="mb-5 inline-flex items-center gap-2 text-sm font-semibold">
-        <ArrowLeft className="size-4" /> {group.name}
-      </Link>
-      <h1 className="text-3xl font-bold">Payments</h1>
-      <p className="mt-2 text-muted-foreground">
-        Tap a cell to mark paid, unpaid, or partial. This only updates the register.
-      </p>
+      <PageHeader
+        backHref={`/groups/${id}`}
+        backLabel={group.name}
+        title="Hapta register"
+        subtitle="Tap a cell to mark paid, unpaid, or partial. This only updates the notebook — money is paid outside."
+      />
 
-      <div className="mt-5 overflow-x-auto rounded-2xl border border-border bg-card">
+      <div className="overflow-x-auto rounded-2xl border border-border bg-card">
         <table className="min-w-max text-left text-sm">
           <thead>
             <tr className="border-b border-border">
               <th className="sticky left-0 bg-card px-3 py-3">Member</th>
               {cycles.map((cycle) => (
                 <th key={cycle.id} className="px-3 py-3 font-semibold">
-                  R{cycle.cycle_number}
+                  <div>M{cycle.cycle_number}</div>
+                  <div className="text-[11px] font-medium text-muted-foreground">
+                    {formatDayMonth(cycle.due_date)}
+                  </div>
                 </th>
               ))}
             </tr>

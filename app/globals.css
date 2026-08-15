@@ -60,6 +60,9 @@ body {
 
 body {
   font-family: var(--font-noto), "Noto Sans Devanagari", sans-serif;
+  background-image:
+    radial-gradient(900px 380px at 50% -120px, #ffd9a8 0%, transparent 68%),
+    radial-gradient(700px 280px at 100% 8%, #fbe8b0 0%, transparent 58%);
 }
 
 button,

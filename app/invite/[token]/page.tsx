@@ -30,19 +30,19 @@ export default async function InvitePage({
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-lg flex-col justify-center px-5 py-10">
       <Card className="p-6">
-        <p className="text-sm font-semibold text-primary">Group invite</p>
+        <p className="text-sm font-semibold text-primary">You&apos;re invited</p>
         <h1 className="mt-2 text-3xl font-bold">{group?.group_name ?? "Bhishi group"}</h1>
         {group ? (
           <p className="mt-2 text-muted-foreground">
-            {groupTypeLabel(group.group_type)} · {formatRupees(group.contribution_amount)} each cycle
+            {groupTypeLabel(group.group_type)} · {formatRupees(group.contribution_amount)} hapta each month
           </p>
         ) : (
           <p className="mt-2 text-muted-foreground">
             If this link looks wrong, ask the organiser to send a new invite.
           </p>
         )}
-        <p className="mt-4 text-sm text-muted-foreground">
-          This app is only a register. It does not collect or hold the pool money.
+        <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
+          Join the register for monthly hapta and the meeting-day chitthi. The app does not collect or hold the pool money.
         </p>
         <div className="mt-6">
           {user ? (

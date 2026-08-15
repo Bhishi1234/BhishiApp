@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { BrandMark } from "@/components/brand/mark";
 import { AuthForm } from "@/components/auth/auth-form";
 import { getCurrentProfile } from "@/lib/group-data";
 
@@ -10,9 +11,10 @@ export default async function SignupPage() {
 
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-lg flex-col justify-center px-5 py-10">
-      <h1 className="text-3xl font-bold">Create your account</h1>
-      <p className="mt-2 mb-8 text-muted-foreground">
-        Phone login comes next. For now, use email so we can get your first group running.
+      <BrandMark href="/" />
+      <h1 className="text-3xl font-bold tracking-tight">Create your account</h1>
+      <p className="mt-2 mb-8 text-[15px] leading-relaxed text-muted-foreground">
+        Phone login comes later. Use email for now so you can start the first group register.
       </p>
       <AuthForm mode="signup" />
     </div>

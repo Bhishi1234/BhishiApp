@@ -1,7 +1,8 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { DeleteGroupButton } from "@/components/groups/delete-group-button";
 import { SettingsForm } from "@/components/groups/settings-form";
+import { Card } from "@/components/ui/card";
+import { PageHeader } from "@/components/layout/page-header";
 import { getGroupBundle } from "@/lib/group-data";
 
 export default async function SettingsPage({
@@ -15,22 +16,29 @@ export default async function SettingsPage({
 
   return (
     <div className="px-5 py-6">
-      <Link href={`/groups/${id}`} className="mb-5 inline-flex items-center gap-2 text-sm font-semibold">
-        <ArrowLeft className="size-4" /> {bundle.group.name}
-      </Link>
-      <h1 className="text-3xl font-bold">Settings</h1>
-      <p className="mt-2 text-muted-foreground">
-        These notes are for your group. The app does not enforce late fees or drop-outs.
-      </p>
-      <div className="mt-5">
-        <SettingsForm
-          groupId={id}
-          canEdit={bundle.isAdmin}
-          lateFeeNotes={bundle.settings?.late_fee_notes ?? ""}
-          dropoutNotes={bundle.settings?.dropout_notes ?? ""}
-          reminderDays={bundle.settings?.reminder_days_before ?? 3}
-        />
-      </div>
+      <PageHeader
+        backHref={`/groups/${id}`}
+        backLabel={bundle.group.name}
+        title="Group settings"
+        subtitle="Notes for your members. The app does not charge late fees or move money."
+      />
+      <SettingsForm
+        groupId={id}
+        canEdit={bundle.isAdmin}
+        lateFeeNotes={bundle.settings?.late_fee_notes ?? ""}
+        dropoutNotes={bundle.settings?.dropout_notes ?? ""}
+        reminderDays={bundle.settings?.reminder_days_before ?? 3}
+      />
+      {bundle.isOwner ? (
+        <Card className="mt-8 p-5">
+          <h2 className="text-lg font-semibold">Delete group</h2>
+          <p className="mt-1 mb-4 text-sm leading-relaxed text-muted-foreground">
+            Only the organiser can remove this register. Payments already made between
+            people are not reversed.
+          </p>
+          <DeleteGroupButton groupId={id} groupName={bundle.group.name} />
+        </Card>
+      ) : null}
     </div>
   );
 }

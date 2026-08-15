@@ -4,7 +4,6 @@ import { useState } from "react";
 import { Share2 } from "lucide-react";
 import { toast } from "sonner";
 import { createInviteAction } from "@/app/actions/groups";
-import { Button } from "@/components/ui/button";
 import { formatRupees, groupTypeLabel } from "@/lib/format";
 import { inviteMessage, whatsappShareUrl } from "@/lib/whatsapp";
 
@@ -41,8 +40,14 @@ export function InviteButton({
   }
 
   return (
-    <Button variant="secondary" size="icon" onClick={invite} disabled={pending} aria-label="Invite">
-      <Share2 />
-    </Button>
+    <button
+      type="button"
+      onClick={invite}
+      disabled={pending}
+      className="flex min-h-[4.5rem] w-full flex-col items-center justify-center gap-1.5 rounded-2xl bg-secondary/80 px-2 text-center text-sm font-semibold disabled:opacity-60"
+    >
+      <Share2 className="size-5" />
+      {pending ? "Invite…" : "Invite"}
+    </button>
   );
 }

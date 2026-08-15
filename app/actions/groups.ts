@@ -71,6 +71,26 @@ export async function updateSettingsAction(formData: FormData) {
   return { success: true };
 }
 
+export async function deleteGroupAction(groupId: string, confirmName: string) {
+  const supabase = await createClient();
+  const { data: group } = await supabase
+    .from("groups")
+    .select("name")
+    .eq("id", groupId)
+    .single();
+  if (!group) return { error: "Group not found." };
+  if (confirmName.trim() !== group.name) {
+    return { error: "Type the group name exactly to delete it." };
+  }
+
+  const { error } = await supabase.rpc("delete_group", {
+    p_group_id: groupId,
+  });
+  if (error) return { error: error.message };
+  revalidatePath("/groups");
+  redirect("/groups");
+}
+
 export async function markPayoutSentAction(cycleId: string, groupId: string, upiRef?: string) {
   const supabase = await createClient();
   const { error } = await supabase.rpc("mark_payout_sent", {

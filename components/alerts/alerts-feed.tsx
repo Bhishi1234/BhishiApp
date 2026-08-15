@@ -8,8 +8,8 @@ const chips: { id: string; label: string; kind?: ActivityKind }[] = [
   { id: "all", label: "All" },
   { id: "winner", label: "Winners", kind: "winner" },
   { id: "member", label: "Members", kind: "member" },
-  { id: "round", label: "Rounds", kind: "round" },
-  { id: "payment", label: "Payments", kind: "payment" },
+  { id: "round", label: "Meetings", kind: "round" },
+  { id: "payment", label: "Hapta", kind: "payment" },
 ];
 
 export function AlertsFeed({
@@ -23,7 +23,7 @@ export function AlertsFeed({
     filter === "all" ? events : events.filter((event) => event.kind === filter);
 
   return (
-    <div className="mt-5">
+    <div>
       <div className="flex gap-2 overflow-x-auto pb-2">
         {chips.map((chip) => (
           <Link
@@ -43,9 +43,9 @@ export function AlertsFeed({
 
       {visible.length === 0 ? (
         <Card className="mt-4 p-6">
-          <h2 className="text-xl font-semibold">No Alerts Yet</h2>
+          <h2 className="text-xl font-semibold">Quiet for now</h2>
           <p className="mt-2 text-muted-foreground">
-            Activities from your groups will appear here.
+            Hapta marks, chitthi winners, and member changes from your groups will show up here.
           </p>
         </Card>
       ) : (

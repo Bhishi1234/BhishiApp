@@ -81,6 +81,7 @@ export async function getGroupBundle(groupId: string) {
 
   const membership = myMembership as GroupMember | null;
   const isAdmin = membership?.role === "admin" || membership?.role === "co_admin";
+  const isOwner = membership?.role === "admin";
 
   return {
     user,
@@ -93,6 +94,7 @@ export async function getGroupBundle(groupId: string) {
     settings: (settings ?? null) as GroupSettings | null,
     membership,
     isAdmin,
+    isOwner,
   };
 }
 

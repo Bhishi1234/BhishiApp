@@ -1,3 +1,5 @@
+import { parseISODate } from "@/lib/dates";
+
 export function formatRupees(amount: number | string | null | undefined) {
   const value = Number(amount ?? 0);
   return new Intl.NumberFormat("en-IN", {
@@ -9,12 +11,27 @@ export function formatRupees(amount: number | string | null | undefined) {
 
 export function formatDate(value: string | Date | null | undefined) {
   if (!value) return "—";
-  const date = typeof value === "string" ? new Date(value) : value;
+  const date =
+    typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value.slice(0, 10)) && value.length <= 10
+      ? parseISODate(value)
+      : typeof value === "string"
+        ? new Date(value)
+        : value;
   if (Number.isNaN(date.getTime())) return "—";
   return new Intl.DateTimeFormat("en-IN", {
     day: "numeric",
     month: "short",
     year: "numeric",
+  }).format(date);
+}
+
+export function formatDayMonth(value: string | null | undefined) {
+  if (!value) return "—";
+  const date = parseISODate(value);
+  if (Number.isNaN(date.getTime())) return "—";
+  return new Intl.DateTimeFormat("en-IN", {
+    day: "numeric",
+    month: "short",
   }).format(date);
 }
 

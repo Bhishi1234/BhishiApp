@@ -1,7 +1,6 @@
 "use client";
 
 import { Bell } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { formatDate, formatRupees } from "@/lib/format";
 import { reminderMessage, whatsappShareUrl } from "@/lib/whatsapp";
 
@@ -32,8 +31,13 @@ export function ReminderButton({
   }
 
   return (
-    <Button variant="secondary" size="icon" onClick={remind} aria-label="Reminder">
-      <Bell />
-    </Button>
+    <button
+      type="button"
+      onClick={remind}
+      className="flex min-h-[4.5rem] w-full flex-col items-center justify-center gap-1.5 rounded-2xl bg-secondary/80 px-2 text-center text-sm font-semibold"
+    >
+      <Bell className="size-5" />
+      Reminder
+    </button>
   );
 }
