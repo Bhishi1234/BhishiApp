@@ -6,10 +6,12 @@ import { claimPhoneInviteAction } from "@/app/actions/members";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { useT } from "@/components/i18n/locale-provider";
 import { formatRupees, groupTypeHindi, groupTypeLabel } from "@/lib/format";
 import type { PhoneInvite } from "@/lib/types";
 
 export function PhoneInviteCard({ invite }: { invite: PhoneInvite }) {
+  const { t } = useT();
   const [pending, setPending] = useState(false);
 
   async function join() {
@@ -25,7 +27,7 @@ export function PhoneInviteCard({ invite }: { invite: PhoneInvite }) {
     <Card className="overflow-hidden p-0">
       <div className="bg-accent px-4 py-3">
         <p className="text-xs font-semibold tracking-wide text-accent-foreground uppercase">
-          You are invited
+          {t("youAreInvited")}
         </p>
         <h2 className="mt-1 text-lg font-bold">{invite.group_name}</h2>
         <p className="text-sm text-accent-foreground/80">
@@ -34,13 +36,12 @@ export function PhoneInviteCard({ invite }: { invite: PhoneInvite }) {
       </div>
       <div className="p-4">
         <p className="text-[15px] leading-relaxed text-muted-foreground">
-          {invite.organiser_name} added you as {invite.invited_as_name}. Join to see hapta
-          and the monthly chitthi. Money still stays outside the app.
+          {t("inviteBody", { organiser: invite.organiser_name, name: invite.invited_as_name })}
         </p>
         <div className="mt-3 flex items-center justify-between gap-3">
-          <Badge>{formatRupees(invite.contribution_amount)} hapta</Badge>
+          <Badge>{formatRupees(invite.contribution_amount)}</Badge>
           <Button size="sm" onClick={join} disabled={pending}>
-            {pending ? "Joining…" : "Join group"}
+            {pending ? t("joining") : t("joinGroup")}
           </Button>
         </div>
       </div>

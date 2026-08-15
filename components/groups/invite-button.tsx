@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Share2 } from "lucide-react";
 import { toast } from "sonner";
 import { createInviteAction } from "@/app/actions/groups";
+import { useT } from "@/components/i18n/locale-provider";
 import { formatRupees, groupTypeLabel } from "@/lib/format";
 import { inviteMessage, whatsappShareUrl } from "@/lib/whatsapp";
 
@@ -18,6 +19,7 @@ export function InviteButton({
   amount: number | string;
   type: string;
 }) {
+  const { t } = useT();
   const [pending, setPending] = useState(false);
 
   async function invite() {
@@ -47,7 +49,7 @@ export function InviteButton({
       className="flex min-h-[4.5rem] w-full flex-col items-center justify-center gap-1.5 rounded-2xl bg-secondary/80 px-2 text-center text-sm font-semibold disabled:opacity-60"
     >
       <Share2 className="size-5" />
-      {pending ? "Invite…" : "Invite"}
+      {pending ? t("saving") : t("invite")}
     </button>
   );
 }

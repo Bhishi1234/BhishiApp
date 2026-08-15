@@ -84,9 +84,16 @@ export async function getGroupBundle(groupId: string) {
   const isAdmin = membership?.role === "admin" || membership?.role === "co_admin";
   const isOwner = membership?.role === "admin";
 
+  const { data: organiser } = await supabase
+    .from("profiles")
+    .select("id, full_name, phone, upi_id")
+    .eq("id", (group as Group).created_by)
+    .maybeSingle();
+
   return {
     user,
     profile,
+    organiser: (organiser ?? null) as Pick<Profile, "id" | "full_name" | "phone" | "upi_id"> | null,
     group: group as Group,
     members: (members ?? []) as GroupMember[],
     cycles: cycleRows,

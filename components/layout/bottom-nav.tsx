@@ -3,16 +3,17 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Bell, CircleUserRound, Users } from "lucide-react";
+import { useT } from "@/components/i18n/locale-provider";
 import { cn } from "@/lib/utils";
-
-const tabs = [
-  { href: "/groups", label: "Groups", icon: Users },
-  { href: "/alerts", label: "Alerts", icon: Bell },
-  { href: "/profile", label: "Profile", icon: CircleUserRound },
-];
 
 export function BottomNav() {
   const pathname = usePathname();
+  const { t } = useT();
+  const tabs = [
+    { href: "/groups", label: t("navGroups"), icon: Users },
+    { href: "/alerts", label: t("navAlerts"), icon: Bell },
+    { href: "/profile", label: t("navProfile"), icon: CircleUserRound },
+  ];
 
   return (
     <nav className="safe-bottom fixed inset-x-0 bottom-0 z-40 border-t border-border bg-white/90 shadow-[0_-10px_30px_rgba(37,99,235,0.08)] backdrop-blur-md">

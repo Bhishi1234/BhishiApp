@@ -1,6 +1,7 @@
 import { PageHeader } from "@/components/layout/page-header";
 import { ProfileForm } from "@/components/profile/profile-form";
 import { getCurrentProfile } from "@/lib/group-data";
+import { parseLocale, t } from "@/lib/i18n";
 import { isProfileComplete } from "@/lib/profile";
 
 export default async function ProfilePage({
@@ -19,18 +20,15 @@ export default async function ProfilePage({
     );
   }
 
+  const locale = parseLocale(profile.locale);
   const needsSetup = setup === "1" || !isProfileComplete(profile);
 
   return (
     <div className="px-5 py-6">
       <PageHeader
         kicker="खाते"
-        title={needsSetup ? "Complete your profile" : "Your profile"}
-        subtitle={
-          needsSetup
-            ? "Name and mobile number are required before you can create or join a group."
-            : "Shown on invites and WhatsApp reminders. The app never uses this to send money."
-        }
+        title={needsSetup ? t(locale, "completeProfile") : t(locale, "profileTitle")}
+        subtitle={needsSetup ? t(locale, "completeProfileSub") : t(locale, "profileSubtitle")}
       />
       <ProfileForm profile={profile} email={user.email} setup={needsSetup} />
     </div>

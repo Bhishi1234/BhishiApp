@@ -1,25 +1,17 @@
-import { Card } from "@/components/ui/card";
+"use client";
 
-const steps = [
-  {
-    title: "Pay hapta",
-    body: "Every member puts in the same amount each month. The app only ticks who paid — money stays between people.",
-  },
-  {
-    title: "Draw one chitthi",
-    body: "The first chitthi is one month after the group start date. Then one name is drawn each month, not sooner.",
-  },
-  {
-    title: "Winner takes the pool",
-    body: "That person receives the lump sum. They keep paying hapta, but their name stays out of later draws.",
-  },
-  {
-    title: "Everyone gets a turn",
-    body: "Members equal months. When the last person has received the pool, the Bhishi is complete.",
-  },
-];
+import { Card } from "@/components/ui/card";
+import { useT } from "@/components/i18n/locale-provider";
 
 export function HowBhishiWorks({ compact = false }: { compact?: boolean }) {
+  const { t } = useT();
+  const steps = [
+    { title: t("howPayHapta"), body: t("howPayHaptaBody") },
+    { title: t("howDraw"), body: t("howDrawBody") },
+    { title: t("howWinner"), body: t("howWinnerBody") },
+    { title: t("howEveryone"), body: t("howEveryoneBody") },
+  ];
+
   return (
     <div className={compact ? "space-y-2" : "space-y-3"}>
       {steps.map((step, index) => (

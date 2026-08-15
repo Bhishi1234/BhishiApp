@@ -4,6 +4,14 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { ContributionStatus, PaymentMode } from "@/lib/types";
 
+function revalidateHapta(groupId: string) {
+  revalidatePath("/groups");
+  revalidatePath(`/groups/${groupId}`);
+  revalidatePath(`/groups/${groupId}/grid`);
+  revalidatePath(`/groups/${groupId}/draw`);
+  revalidatePath("/alerts");
+}
+
 export async function updateContributionAction(input: {
   contributionId: string;
   groupId: string;
@@ -19,8 +27,21 @@ export async function updateContributionAction(input: {
     p_payment_mode: input.paymentMode ?? null,
   });
   if (error) return { error: error.message };
-  revalidatePath(`/groups/${input.groupId}`);
-  revalidatePath(`/groups/${input.groupId}/grid`);
-  revalidatePath("/alerts");
+  revalidateHapta(input.groupId);
+  return { success: true };
+}
+
+export async function claimHaptaAction(input: {
+  contributionId: string;
+  groupId: string;
+  paymentMode?: PaymentMode;
+}) {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("claim_hapta", {
+    p_contribution_id: input.contributionId,
+    p_payment_mode: input.paymentMode ?? "upi",
+  });
+  if (error) return { error: error.message };
+  revalidateHapta(input.groupId);
   return { success: true };
 }

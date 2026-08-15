@@ -65,6 +65,7 @@ export async function updateSettingsAction(formData: FormData) {
     p_late_fee_notes: String(formData.get("lateFeeNotes") ?? ""),
     p_dropout_notes: String(formData.get("dropoutNotes") ?? ""),
     p_reminder_days_before: Number(formData.get("reminderDays") ?? 3),
+    p_self_serve_paid: formData.get("selfServePaid") === "true",
   });
   if (error) return { error: error.message };
   revalidatePath(`/groups/${groupId}/settings`);

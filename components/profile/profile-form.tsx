@@ -4,6 +4,8 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { signOutAction } from "@/app/actions/auth";
 import { updateProfileAction } from "@/app/actions/profile";
+import { LocaleSwitcher } from "@/components/i18n/locale-switcher";
+import { useT } from "@/components/i18n/locale-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,6 +21,7 @@ export function ProfileForm({
   email: string | undefined;
   setup?: boolean;
 }) {
+  const { t, locale } = useT();
   const [pending, setPending] = useState(false);
 
   async function onSubmit(formData: FormData) {
@@ -26,7 +29,7 @@ export function ProfileForm({
     const result = await updateProfileAction(formData);
     setPending(false);
     if (result.error) toast.error(result.error);
-    else toast.success("Profile saved");
+    else toast.success(t("profileSaved"));
   }
 
   async function copyId() {
@@ -38,10 +41,13 @@ export function ProfileForm({
 
   return (
     <div className="space-y-6">
+      <LocaleSwitcher />
+
       <form action={onSubmit} className="space-y-4">
         {setup ? <input type="hidden" name="setup" value="1" /> : null}
+        <input type="hidden" name="locale" value={locale} />
         <div className="space-y-2">
-          <Label htmlFor="fullName">Name</Label>
+          <Label htmlFor="fullName">{t("name")}</Label>
           <Input id="fullName" name="fullName" defaultValue={profile.full_name ?? ""} required />
         </div>
         <div className="space-y-2">
@@ -49,7 +55,7 @@ export function ProfileForm({
           <Input id="email" value={email ?? ""} disabled />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="phone">Mobile number</Label>
+          <Label htmlFor="phone">{t("mobileNumber")}</Label>
           <Input
             id="phone"
             name="phone"
@@ -58,30 +64,25 @@ export function ProfileForm({
             placeholder="10-digit mobile number"
             required
           />
-          <p className="text-xs text-muted-foreground">
-            Required. This is how group invites find you, and how reminders are sent.
-          </p>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="upiId">UPI ID</Label>
+          <Label htmlFor="upiId">{t("upiId")}</Label>
           <Input
             id="upiId"
             name="upiId"
             defaultValue={profile.upi_id ?? ""}
             placeholder="name@okicici"
           />
-          <p className="text-xs text-muted-foreground">
-            Shown on reminders only. The app never sends money.
-          </p>
+          <p className="text-xs text-muted-foreground">{t("noUpi")}</p>
         </div>
         <Button type="submit" className="w-full" disabled={pending}>
-          {pending ? "Saving…" : setup ? "Save and continue" : "Save profile"}
+          {pending ? t("saving") : setup ? t("saveAndContinue") : t("saveProfile")}
         </Button>
       </form>
 
       <div className="rounded-2xl bg-card p-4 text-sm">
         <p className="text-muted-foreground">Member since</p>
-        <p className="font-semibold">{formatDate(profile.created_at)}</p>
+        <p className="font-semibold">{formatDate(profile.created_at, locale)}</p>
         <p className="mt-3 text-muted-foreground">Internal user ID</p>
         <button type="button" onClick={copyId} className="mt-1 break-all text-left font-mono text-xs">
           {profile.id}
@@ -91,14 +92,14 @@ export function ProfileForm({
       {support ? (
         <Button asChild variant="outline" className="w-full">
           <a href={`https://wa.me/${support.replace(/\D/g, "")}`} target="_blank" rel="noreferrer">
-            Need support? Chat on WhatsApp
+            WhatsApp
           </a>
         </Button>
       ) : null}
 
       <form action={signOutAction}>
         <Button type="submit" variant="ghost" className="w-full">
-          Sign out
+          {t("signOut")}
         </Button>
       </form>
     </div>

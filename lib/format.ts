@@ -1,4 +1,5 @@
 import { parseISODate } from "@/lib/dates";
+import { dateLocale, parseLocale, type AppLocale } from "@/lib/i18n";
 
 export function formatRupees(amount: number | string | null | undefined) {
   const value = Number(amount ?? 0);
@@ -9,7 +10,10 @@ export function formatRupees(amount: number | string | null | undefined) {
   }).format(value);
 }
 
-export function formatDate(value: string | Date | null | undefined) {
+export function formatDate(
+  value: string | Date | null | undefined,
+  locale: AppLocale | string = "en",
+) {
   if (!value) return "—";
   const date =
     typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value.slice(0, 10)) && value.length <= 10
@@ -18,18 +22,18 @@ export function formatDate(value: string | Date | null | undefined) {
         ? new Date(value)
         : value;
   if (Number.isNaN(date.getTime())) return "—";
-  return new Intl.DateTimeFormat("en-IN", {
+  return new Intl.DateTimeFormat(dateLocale(parseLocale(locale)), {
     day: "numeric",
     month: "short",
     year: "numeric",
   }).format(date);
 }
 
-export function formatDayMonth(value: string | null | undefined) {
+export function formatDayMonth(value: string | null | undefined, locale: AppLocale | string = "en") {
   if (!value) return "—";
   const date = parseISODate(value);
   if (Number.isNaN(date.getTime())) return "—";
-  return new Intl.DateTimeFormat("en-IN", {
+  return new Intl.DateTimeFormat(dateLocale(parseLocale(locale)), {
     day: "numeric",
     month: "short",
   }).format(date);

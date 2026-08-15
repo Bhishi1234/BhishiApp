@@ -5,8 +5,10 @@ import { toast } from "sonner";
 import { markPayoutSentAction } from "@/app/actions/groups";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useT } from "@/components/i18n/locale-provider";
 
 export function PayoutForm({ cycleId, groupId }: { cycleId: string; groupId: string }) {
+  const { t } = useT();
   const [ref, setRef] = useState("");
   const [pending, setPending] = useState(false);
 
@@ -15,7 +17,7 @@ export function PayoutForm({ cycleId, groupId }: { cycleId: string; groupId: str
     const result = await markPayoutSentAction(cycleId, groupId, ref);
     setPending(false);
     if (result.error) toast.error(result.error);
-    else toast.success("Payout marked as sent");
+    else toast.success(t("handoverSaved"));
   }
 
   return (
@@ -23,10 +25,10 @@ export function PayoutForm({ cycleId, groupId }: { cycleId: string; groupId: str
       <Input
         value={ref}
         onChange={(event) => setRef(event.target.value)}
-        placeholder="UPI reference (optional)"
+        placeholder="UPI / cash note (optional)"
       />
       <Button variant="outline" className="w-full" disabled={pending} onClick={save}>
-        {pending ? "Saving…" : "Mark pool as handed over"}
+        {pending ? t("saving") : t("markPoolHanded")}
       </Button>
     </div>
   );

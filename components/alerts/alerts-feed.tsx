@@ -1,16 +1,11 @@
+"use client";
+
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
+import { useT } from "@/components/i18n/locale-provider";
 import { formatDate } from "@/lib/format";
 import type { ActivityEvent, ActivityKind } from "@/lib/types";
 import { cn } from "@/lib/utils";
-
-const chips: { id: string; label: string; kind?: ActivityKind }[] = [
-  { id: "all", label: "All" },
-  { id: "winner", label: "Winners", kind: "winner" },
-  { id: "member", label: "Members", kind: "member" },
-  { id: "round", label: "Meetings", kind: "round" },
-  { id: "payment", label: "Hapta", kind: "payment" },
-];
 
 export function AlertsFeed({
   events,
@@ -19,6 +14,14 @@ export function AlertsFeed({
   events: (ActivityEvent & { groupName?: string })[];
   filter: string;
 }) {
+  const { t, locale } = useT();
+  const chips: { id: string; label: string; kind?: ActivityKind }[] = [
+    { id: "all", label: t("filterAll") },
+    { id: "winner", label: t("filterWinners"), kind: "winner" },
+    { id: "member", label: t("filterMembers"), kind: "member" },
+    { id: "round", label: t("filterMeetings"), kind: "round" },
+    { id: "payment", label: t("filterHapta"), kind: "payment" },
+  ];
   const visible =
     filter === "all" ? events : events.filter((event) => event.kind === filter);
 
@@ -43,10 +46,8 @@ export function AlertsFeed({
 
       {visible.length === 0 ? (
         <Card className="mt-4 p-6">
-          <h2 className="text-xl font-semibold">Quiet for now</h2>
-          <p className="mt-2 text-muted-foreground">
-            Hapta marks, chitthi winners, and member changes from your groups will show up here.
-          </p>
+          <h2 className="text-xl font-semibold">{t("quietAlerts")}</h2>
+          <p className="mt-2 text-muted-foreground">{t("quietAlertsBody")}</p>
         </Card>
       ) : (
         <div className="mt-4 space-y-3">
@@ -59,7 +60,7 @@ export function AlertsFeed({
                   <p className="mt-1 text-sm text-muted-foreground">{event.body}</p>
                 ) : null}
                 <p className="mt-2 text-xs text-muted-foreground">
-                  {formatDate(event.created_at)}
+                  {formatDate(event.created_at, locale)}
                 </p>
               </Card>
             </Link>

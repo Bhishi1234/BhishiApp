@@ -16,8 +16,8 @@ export function reminderMessage(input: {
   upiId?: string | null;
 }) {
   const upiLine = input.upiId
-    ? ` Pay via UPI to ${input.upiId} and mark paid in the app after you send.`
-    : " Mark paid in the app after you send.";
+    ? ` Pay via UPI to ${input.upiId}. After you send, open Bhishi and tap I paid.`
+    : " After you send, open Bhishi and tap I paid.";
   return `Namaste ${input.memberName}, ${input.amount} for ${input.groupName} is due on ${input.dueDate}.${upiLine} This app does not collect money.`;
 }
 

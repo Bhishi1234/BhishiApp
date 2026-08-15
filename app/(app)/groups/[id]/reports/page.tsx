@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { PageHeader } from "@/components/layout/page-header";
 import { formatRupees } from "@/lib/format";
 import { getGroupBundle } from "@/lib/group-data";
+import { parseLocale, t } from "@/lib/i18n";
 
 export default async function ReportsPage({
   params,
@@ -15,6 +16,7 @@ export default async function ReportsPage({
   const bundle = await getGroupBundle(id);
   if (!bundle) notFound();
 
+  const locale = parseLocale(bundle.profile?.locale);
   const { group, members, cycles, contributions, payouts } = bundle;
 
   return (
@@ -22,8 +24,8 @@ export default async function ReportsPage({
       <PageHeader
         backHref={`/groups/${id}`}
         backLabel={group.name}
-        title="Member statements"
-        subtitle="A notebook summary for the group. This is not a bank statement."
+        title={t(locale, "memberStatements")}
+        subtitle={t(locale, "statementsSubtitle")}
       />
 
       <StatementButton
@@ -43,13 +45,13 @@ export default async function ReportsPage({
               <div className="flex items-center justify-between gap-3">
                 <p className="font-semibold">{member.display_name}</p>
                 {won ? (
-                  <Badge className="bg-accent text-accent-foreground">Received pool</Badge>
+                  <Badge className="bg-accent text-accent-foreground">{t(locale, "receivedPoolBadge")}</Badge>
                 ) : (
-                  <Badge>Waiting for turn</Badge>
+                  <Badge>{t(locale, "waitingTurn")}</Badge>
                 )}
               </div>
               <p className="mt-1 text-sm text-muted-foreground">
-                {paid} / {rows.length} months paid ·{" "}
+                {t(locale, "monthsPaid", { paid, total: rows.length })} ·{" "}
                 {formatRupees(rows.reduce((sum, row) => sum + Number(row.amount_paid), 0))}
               </p>
             </Card>

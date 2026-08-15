@@ -1,6 +1,7 @@
 "use client";
 
 import { Bell } from "lucide-react";
+import { useT } from "@/components/i18n/locale-provider";
 import { formatDate, formatRupees } from "@/lib/format";
 import { reminderMessage, whatsappShareUrl } from "@/lib/whatsapp";
 
@@ -17,13 +18,15 @@ export function ReminderButton({
   dueDate: string;
   upiId?: string | null;
 }) {
+  const { t, locale } = useT();
+
   function remind() {
     const names = unpaid.map((member) => member.name).join(", ");
     const message = reminderMessage({
       memberName: names || "friends",
       groupName,
       amount: formatRupees(amount),
-      dueDate: formatDate(dueDate),
+      dueDate: formatDate(dueDate, locale),
       upiId,
     });
     const firstPhone = unpaid.find((member) => member.phone)?.phone;
@@ -37,7 +40,7 @@ export function ReminderButton({
       className="flex min-h-[4.5rem] w-full flex-col items-center justify-center gap-1.5 rounded-2xl bg-secondary/80 px-2 text-center text-sm font-semibold"
     >
       <Bell className="size-5" />
-      Reminder
+      {t("reminder")}
     </button>
   );
 }
