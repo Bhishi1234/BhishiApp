@@ -298,7 +298,10 @@ begin
       i,
       v_due,
       p_amount * p_member_count,
-      case when i = 1 then 'open' else 'upcoming' end
+      case
+        when i = 1 then 'open'::public.cycle_status
+        else 'upcoming'::public.cycle_status
+      end
     );
   end loop;
 
