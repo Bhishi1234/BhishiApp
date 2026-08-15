@@ -55,7 +55,7 @@ export function LuckyDraw({
 
   return (
     <div className="space-y-4">
-      <Card className="flex min-h-52 flex-col items-center justify-center bg-[radial-gradient(circle_at_top,#fbe8b0,transparent_62%)] p-6 text-center">
+      <Card className="flex min-h-52 flex-col items-center justify-center bg-[radial-gradient(circle_at_top,#dbeafe,transparent_62%)] p-6 text-center">
         <p className="text-sm font-semibold text-primary">Month {cycleNumber} · meeting day</p>
         <p className="mt-1 text-sm font-semibold text-muted-foreground">
           {spinning ? "Drawing the chitthi…" : winner ? "Winner locked for this month" : "Ready to draw once"}

@@ -1,4 +1,6 @@
--- Fix: CASE in create_group returned text, but cycles.status is cycle_status.
+-- First chitthi is one period after the group start date.
+-- Monthly: due dates are start + 1 month, + 2 months, ...
+-- Weekly: due dates are start + 7 days, + 14 days, ...
 -- Run this in the Supabase SQL editor.
 
 create or replace function public.create_group(
@@ -102,5 +104,17 @@ begin
   return new_id;
 end;
 $$;
+
+-- Move any undrawn rounds onto the new calendar.
+update public.cycles c
+set due_date = case
+  when g.frequency = 'weekly' then g.start_date + (c.cycle_number * 7)
+  else (g.start_date + (c.cycle_number || ' months')::interval)::date
+end
+from public.groups g
+where g.id = c.group_id
+  and not exists (
+    select 1 from public.payouts p where p.cycle_id = c.id
+  );
 
 grant execute on function public.create_group(text, public.group_type, numeric, int, public.cycle_frequency, date) to authenticated;

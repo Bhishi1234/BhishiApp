@@ -12,7 +12,7 @@ export function BrandMark({
     <>
       <div
         className={cn(
-          "flex items-center justify-center rounded-2xl bg-primary font-bold text-primary-foreground shadow-[0_8px_18px_rgba(196,92,38,0.28)]",
+          "flex items-center justify-center rounded-2xl bg-gradient-to-br from-[#60a5fa] to-[#2563eb] font-bold text-white shadow-[0_8px_18px_rgba(37,99,235,0.28)]",
           compact ? "size-9 text-base" : "size-11 text-lg",
         )}
       >

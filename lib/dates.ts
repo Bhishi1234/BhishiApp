@@ -24,3 +24,21 @@ export function daysUntil(value: string) {
 export function isDueOrPast(value: string) {
   return daysUntil(value) <= 0;
 }
+
+export function addDays(iso: string, days: number) {
+  const date = parseISODate(iso);
+  date.setDate(date.getDate() + days);
+  return localISODate(date);
+}
+
+export function addMonths(iso: string, months: number) {
+  const date = parseISODate(iso);
+  const day = date.getDate();
+  date.setMonth(date.getMonth() + months);
+  if (date.getDate() < day) date.setDate(0);
+  return localISODate(date);
+}
+
+export function firstDrawDate(startDate: string, frequency: "monthly" | "weekly") {
+  return frequency === "weekly" ? addDays(startDate, 7) : addMonths(startDate, 1);
+}

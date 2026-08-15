@@ -76,7 +76,7 @@ export function getMeetingState(
     canDraw: false,
     daysUntilDraw: wait,
     label: wait === 1 ? "Draw opens tomorrow" : `Draw opens in ${wait} days`,
-    detail: `Chitthi is drawn once each ${period}, on or after the due date.`,
+    detail: `Chitthi is drawn once each ${period}, one ${period} after the group start date.`,
   };
 }
 

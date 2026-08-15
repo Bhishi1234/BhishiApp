@@ -93,7 +93,7 @@ export default async function GroupDetailPage({
           <h2 className="text-xl font-semibold">Add members first</h2>
           <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground">
             A Bhishi needs at least two people. You are already in as the organiser.
-            Add the rest, collect hapta, and draw only on the monthly due date.
+            Add the rest, collect hapta, and draw the first chitthi one month after the start date.
           </p>
           <Button asChild className="mt-4 w-full">
             <Link href={`/groups/${id}/members`}>Add a member</Link>
@@ -101,17 +101,17 @@ export default async function GroupDetailPage({
         </Card>
       ) : (
         <Card className="mt-5 overflow-hidden p-0">
-          <div className="bg-primary px-5 py-4 text-primary-foreground">
+          <div className="panel-hero px-5 py-5">
             <div className="flex items-center justify-between gap-3">
-              <p className="text-sm font-semibold">
+              <p className="text-sm font-semibold text-primary">
                 Month {current?.cycle_number ?? 1} of {group.planned_member_count}
               </p>
-              <Badge className="bg-white/15 text-primary-foreground">{meeting.label}</Badge>
+              <Badge>{meeting.label}</Badge>
             </div>
-            <h2 className="mt-1 text-2xl font-bold">
+            <h2 className="mt-1 text-2xl font-bold text-foreground">
               {meeting.canDraw ? "Meeting day" : `Due ${formatDate(current?.due_date)}`}
             </h2>
-            <p className="mt-1 text-sm text-primary-foreground/85">{meeting.detail}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{meeting.detail}</p>
           </div>
           <div className="p-5">
             <div className="grid grid-cols-2 gap-3 text-sm">

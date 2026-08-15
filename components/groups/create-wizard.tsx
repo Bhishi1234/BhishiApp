@@ -7,8 +7,8 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
-import { formatRupees } from "@/lib/format";
-import { localISODate } from "@/lib/dates";
+import { formatDate, formatRupees } from "@/lib/format";
+import { firstDrawDate, localISODate } from "@/lib/dates";
 import type { CycleFrequency, GroupType } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -159,13 +159,20 @@ export function CreateWizard() {
             </p>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="start">First meeting date</Label>
+            <Label htmlFor="start">Group start date</Label>
             <Input
               id="start"
               type="date"
               value={startDate}
               onChange={(event) => setStartDate(event.target.value)}
             />
+            <p className="text-sm text-muted-foreground">
+              First chitthi:{" "}
+              <strong className="text-foreground">
+                {formatDate(firstDrawDate(startDate, frequency))}
+              </strong>
+              . That is one {frequency === "weekly" ? "week" : "month"} after this date.
+            </p>
           </div>
           <div className="space-y-2">
             <Label>How often do you meet?</Label>
@@ -191,8 +198,8 @@ export function CreateWizard() {
             <Card className="p-4 text-sm">
               Monthly pool:{" "}
               <strong>{formatRupees(amountNumber * countNumber)}</strong> when
-              all {countNumber} members have joined. The chitthi can be drawn
-              only on or after each due date.
+              all {countNumber} members have joined. The first chitthi opens one{" "}
+              {frequency === "weekly" ? "week" : "month"} after the start date.
             </Card>
           ) : null}
         </div>

@@ -5,9 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { PageHeader } from "@/components/layout/page-header";
 import { getMeetingState } from "@/lib/cycle";
-import { formatRupees, groupTypeHindi, groupTypeLabel } from "@/lib/format";
+import { formatDate, formatRupees, groupTypeHindi, groupTypeLabel } from "@/lib/format";
 import { getCurrentProfile, getPhoneInvites } from "@/lib/group-data";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
 import type { Cycle, Group, Payout } from "@/lib/types";
@@ -62,14 +61,47 @@ export default async function GroupsPage() {
 
   const hasPhone = Boolean(profile?.phone);
   const showEmpty = groupRows.length === 0 && invites.length === 0;
+  const greeting = profile?.full_name?.trim() || "there";
+
+  const upcoming = groupRows
+    .map((group) => {
+      const meeting = getMeetingState(
+        cycles.filter((cycle) => cycle.group_id === group.id),
+        payouts.filter((payout) =>
+          cycles.some((cycle) => cycle.group_id === group.id && cycle.id === payout.cycle_id),
+        ),
+        group.frequency,
+      );
+      return { group, meeting };
+    })
+    .filter((row) => row.meeting.cycle && !row.meeting.drawn)
+    .sort((a, b) => (a.meeting.cycle?.due_date ?? "").localeCompare(b.meeting.cycle?.due_date ?? ""));
+  const nextDraw = upcoming[0];
 
   return (
     <div className="px-5 py-6">
-      <PageHeader
-        kicker="भिशी"
-        title="Your groups"
-        subtitle="Monthly hapta, meeting-day chitthi, and who has already received the pool."
-      />
+      <div className="mb-5">
+        <p className="text-sm font-semibold tracking-wide text-primary uppercase">Dashboard</p>
+        <h1 className="mt-1 text-[1.85rem] leading-tight font-bold tracking-tight">
+          Hello, {greeting}
+        </h1>
+        <p className="mt-1.5 text-[15px] leading-relaxed text-muted-foreground">
+          Hapta, chitthi, and who has already received the pool — in one register.
+        </p>
+      </div>
+
+      {nextDraw ? (
+        <Card className="mb-5 overflow-hidden p-0">
+          <div className="panel-hero px-5 py-5">
+            <p className="text-sm font-semibold text-primary">Next chitthi</p>
+            <h2 className="mt-1 text-2xl font-bold">{formatDate(nextDraw.meeting.cycle?.due_date)}</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {nextDraw.group.name} · {nextDraw.meeting.label}
+            </p>
+            <p className="mt-2 text-sm text-muted-foreground">{nextDraw.meeting.detail}</p>
+          </div>
+        </Card>
+      ) : null}
 
       {!hasPhone ? (
         <Card className="mb-4 p-4">
@@ -98,11 +130,12 @@ export default async function GroupsPage() {
       {showEmpty ? (
         <div className="space-y-4">
           <Card className="overflow-hidden p-0">
-            <div className="bg-primary px-5 py-5 text-primary-foreground">
-              <p className="text-sm font-semibold text-primary-foreground/80">Start a Bhishi</p>
+            <div className="panel-hero px-5 py-5">
+              <p className="text-sm font-semibold text-primary">Start a Bhishi</p>
               <p className="mt-1 text-2xl font-bold">Create your first group</p>
-              <p className="mt-2 text-sm text-primary-foreground/85">
-                10 members means 10 months. One winner each month, until everyone has had a turn.
+              <p className="mt-2 text-sm text-muted-foreground">
+                The first chitthi opens one month after the start date. Then one winner each
+                month, until everyone has had a turn.
               </p>
             </div>
             <div className="p-5">
@@ -115,11 +148,9 @@ export default async function GroupsPage() {
         </div>
       ) : groupRows.length > 0 ? (
         <div className="space-y-3">
-          {invites.length > 0 ? (
-            <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
-              Your groups
-            </h2>
-          ) : null}
+          <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
+            Your groups
+          </h2>
           {groupRows.map((group) => {
             const groupCycles = cycles.filter((cycle) => cycle.group_id === group.id);
             const groupPayouts = payouts.filter((payout) =>
@@ -135,7 +166,7 @@ export default async function GroupsPage() {
               <Link key={group.id} href={`/groups/${group.id}`} className="block">
                 <Card className="overflow-hidden p-0">
                   <div className="flex">
-                    <div className="w-1.5 shrink-0 bg-primary" />
+                    <div className="w-1.5 shrink-0 bg-gradient-to-b from-[#60a5fa] to-[#2563eb]" />
                     <div className="flex-1 p-4">
                       <div className="flex items-start justify-between gap-3">
                         <div>
@@ -178,7 +209,7 @@ export default async function GroupsPage() {
 
       <Link
         href="/groups/new"
-        className="fixed right-5 bottom-24 z-30 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[0_10px_24px_rgba(196,92,38,0.35)]"
+        className="fixed right-5 bottom-24 z-30 flex size-14 items-center justify-center rounded-full bg-primary text-white shadow-[0_10px_24px_rgba(37,99,235,0.35)]"
         aria-label="Create group"
       >
         <Plus className="size-7" />

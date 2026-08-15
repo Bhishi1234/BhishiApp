@@ -66,9 +66,9 @@ export default async function DrawPage({
           <p className="text-sm font-semibold text-primary">{meeting.label}</p>
           <h2 className="mt-2 text-2xl font-bold">Due {formatDate(current?.due_date)}</h2>
           <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
-            In a traditional Bhishi the chitthi is drawn at the monthly meeting, after
-            hapta is collected. The app follows that: one draw per month, only on or
-            after the due date.
+            In a traditional Bhishi the first chitthi is drawn one month after the
+            group starts, after hapta is collected. The app follows that: one draw
+            per month, only on or after that due date.
           </p>
           <Button asChild variant="outline" className="mt-4 w-full">
             <Link href={`/groups/${id}/grid`}>Mark this month&apos;s hapta</Link>

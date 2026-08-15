@@ -7,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "Record-keeping for Bhishi, Kameti, and Committee groups.",
     start_url: "/groups",
     display: "standalone",
-    background_color: "#fff8f1",
-    theme_color: "#c45c26",
+    background_color: "#f4f8ff",
+    theme_color: "#2563eb",
     icons: [
       {
         src: "/icon.svg",

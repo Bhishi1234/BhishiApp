@@ -303,9 +303,9 @@ begin
 
   for i in 1..p_member_count loop
     if p_frequency = 'weekly' then
-      v_due := (p_start_date + ((i - 1) * 7));
+      v_due := (p_start_date + (i * 7));
     else
-      v_due := (p_start_date + ((i - 1) || ' months')::interval)::date;
+      v_due := (p_start_date + (i || ' months')::interval)::date;
     end if;
 
     insert into public.cycles (group_id, cycle_number, due_date, pool_amount, status)
@@ -332,7 +332,7 @@ begin
     new_id,
     'round',
     trim(p_name) || ' was created',
-    'Add members, then track contributions and run the first round.',
+    'First chitthi opens one month after the start date. Add members, then collect hapta.',
     uid
   );
 

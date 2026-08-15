@@ -7,7 +7,7 @@ const steps = [
   },
   {
     title: "Draw one chitthi",
-    body: "On the meeting day, one name is drawn. Traditional Bhishi allows this once a month, not sooner.",
+    body: "The first chitthi is one month after the group start date. Then one name is drawn each month, not sooner.",
   },
   {
     title: "Winner takes the pool",
@@ -24,7 +24,7 @@ export function HowBhishiWorks({ compact = false }: { compact?: boolean }) {
     <div className={compact ? "space-y-2" : "space-y-3"}>
       {steps.map((step, index) => (
         <Card key={step.title} className="flex gap-3 p-4">
-          <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary text-sm font-bold text-foreground">
             {index + 1}
           </span>
           <div>

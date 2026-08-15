@@ -1,25 +1,25 @@
 @import "tailwindcss";
 
 :root {
-  --background: #fff8f1;
-  --foreground: #1f1a16;
-  --card: #fffdf9;
-  --card-foreground: #1f1a16;
-  --popover: #fffdf9;
-  --popover-foreground: #1f1a16;
-  --primary: #c45c26;
-  --primary-foreground: #fff8f1;
-  --secondary: #f3e6d8;
-  --secondary-foreground: #1f1a16;
-  --muted: #f6ede3;
-  --muted-foreground: #6b5e55;
-  --accent: #fbe8b0;
-  --accent-foreground: #5c3d0a;
+  --background: #f4f8ff;
+  --foreground: #0b1220;
+  --card: #ffffff;
+  --card-foreground: #0b1220;
+  --popover: #ffffff;
+  --popover-foreground: #0b1220;
+  --primary: #2563eb;
+  --primary-foreground: #ffffff;
+  --secondary: #e8f1ff;
+  --secondary-foreground: #0b1220;
+  --muted: #eef4fb;
+  --muted-foreground: #3d4f66;
+  --accent: #dbeafe;
+  --accent-foreground: #0b1220;
   --destructive: #b42318;
-  --border: #e8d5c4;
-  --input: #e8d5c4;
-  --ring: #c45c26;
-  --radius: 0.9rem;
+  --border: #d5e4f7;
+  --input: #d5e4f7;
+  --ring: #3b82f6;
+  --radius: 1rem;
 }
 
 @theme inline {
@@ -61,8 +61,14 @@ body {
 body {
   font-family: var(--font-noto), "Noto Sans Devanagari", sans-serif;
   background-image:
-    radial-gradient(900px 380px at 50% -120px, #ffd9a8 0%, transparent 68%),
-    radial-gradient(700px 280px at 100% 8%, #fbe8b0 0%, transparent 58%);
+    linear-gradient(180deg, #ffffff 0%, #f4f8ff 38%, #e8f1ff 100%),
+    radial-gradient(900px 420px at 0% -10%, rgba(147, 197, 253, 0.45) 0%, transparent 58%),
+    radial-gradient(720px 360px at 100% 0%, rgba(191, 219, 254, 0.55) 0%, transparent 52%);
+  background-attachment: fixed;
+}
+
+.panel-hero {
+  background-image: linear-gradient(135deg, #ffffff 0%, #f8fbff 42%, #dbeafe 100%);
 }
 
 button,

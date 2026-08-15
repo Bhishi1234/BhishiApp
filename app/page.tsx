@@ -12,9 +12,9 @@ export default function LandingPage() {
         The group register for a monthly Bhishi.
       </h1>
       <p className="mt-4 text-[17px] leading-relaxed text-muted-foreground">
-        Members pay hapta. On meeting day you draw one chitthi. That person takes
-        the pool. Everyone keeps paying until each person has received it once.
-        This app never holds the money.
+        Members pay hapta. One month after the start date you draw the first chitthi.
+        That person takes the pool. Everyone keeps paying until each person has
+        received it once. This app never holds the money.
       </p>
 
       <div className="mt-8 space-y-3">
