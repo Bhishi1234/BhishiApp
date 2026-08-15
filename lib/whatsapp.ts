@@ -21,6 +21,14 @@ export function reminderMessage(input: {
   return `Namaste ${input.memberName}, ${input.amount} for ${input.groupName} is due on ${input.dueDate}.${upiLine} This app does not collect money.`;
 }
 
+export function joinAppMessage(input: {
+  memberName: string;
+  groupName: string;
+  link: string;
+}) {
+  return `Namaste ${input.memberName}, you are in ${input.groupName} on Bhishi.\n\nSign in with this same mobile number to see hapta and the monthly chitthi. The app does not collect money.\n\nJoin: ${input.link}`;
+}
+
 export function inviteMessage(input: {
   groupName: string;
   amount: string;

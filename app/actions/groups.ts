@@ -102,3 +102,24 @@ export async function markPayoutSentAction(cycleId: string, groupId: string, upi
   revalidatePath(`/groups/${groupId}`);
   return { success: true };
 }
+
+export async function postponeCycleAction(input: {
+  cycleId: string;
+  groupId: string;
+  newDue: string;
+  note?: string;
+}) {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("postpone_cycle", {
+    p_cycle_id: input.cycleId,
+    p_new_due: input.newDue,
+    p_note: input.note ?? null,
+  });
+  if (error) return { error: error.message };
+  revalidatePath(`/groups/${input.groupId}`);
+  revalidatePath(`/groups/${input.groupId}/draw`);
+  revalidatePath(`/groups/${input.groupId}/grid`);
+  revalidatePath("/groups");
+  revalidatePath("/alerts");
+  return { success: true };
+}

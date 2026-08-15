@@ -74,3 +74,20 @@ export async function replaceMemberAction(input: {
   revalidatePath("/alerts");
   return { success: true };
 }
+
+export async function setCoAdminAction(input: {
+  memberId: string;
+  groupId: string;
+  enabled: boolean;
+}) {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("set_co_admin", {
+    p_member_id: input.memberId,
+    p_enabled: input.enabled,
+  });
+  if (error) return { error: error.message };
+  revalidatePath(`/groups/${input.groupId}`);
+  revalidatePath(`/groups/${input.groupId}/members`);
+  revalidatePath("/alerts");
+  return { success: true };
+}

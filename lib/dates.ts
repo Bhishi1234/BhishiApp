@@ -25,6 +25,10 @@ export function isDueOrPast(value: string) {
   return daysUntil(value) <= 0;
 }
 
+export function daysLate(value: string) {
+  return Math.max(0, -daysUntil(value));
+}
+
 export function addDays(iso: string, days: number) {
   const date = parseISODate(iso);
   date.setDate(date.getDate() + days);

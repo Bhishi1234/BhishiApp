@@ -4,11 +4,14 @@ import { Settings, UserPlus } from "lucide-react";
 import { HowBhishiWorks } from "@/components/groups/how-bhishi-works";
 import { InviteButton } from "@/components/groups/invite-button";
 import { MeetingChecklist } from "@/components/groups/meeting-checklist";
+import { MeetingSlipButton } from "@/components/groups/meeting-slip-button";
+import { PostponeForm } from "@/components/groups/postpone-form";
 import { ReminderButton } from "@/components/groups/reminder-button";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { PageHeader } from "@/components/layout/page-header";
 import { getMeetingState, winnersTimeline } from "@/lib/cycle";
+import { daysLate } from "@/lib/dates";
 import { formatDate, formatRupees, groupTypeHindi, groupTypeLabel } from "@/lib/format";
 import { getGroupBundle } from "@/lib/group-data";
 import { parseLocale, t } from "@/lib/i18n";
@@ -40,6 +43,7 @@ export default async function GroupDetailPage({
       name: member.display_name,
       phone: member.phone,
       claimed: Boolean(row?.member_claimed_at),
+      lateDays: daysLate(current?.due_date ?? group.start_date),
     };
   }).filter((row) => row.contributionId);
   const currentPayout = payouts.find((row) => row.cycle_id === current?.id);
@@ -47,6 +51,15 @@ export default async function GroupDetailPage({
   const canStartRound = members.length >= 2;
   const timeline = winnersTimeline(cycles, payouts, members);
   const organiserUpi = organiser?.upi_id;
+  const joinedCount = members.filter((member) => member.user_id).length;
+  const wonIds = new Set(payouts.map((row) => row.winner_member_id));
+  const eligibleNames = members.filter((member) => !wonIds.has(member.id)).map((member) => member.display_name);
+  const alreadyWonNames = members.filter((member) => wonIds.has(member.id)).map((member) => member.display_name);
+  const paidNames = members
+    .filter((member) =>
+      currentContributions.some((row) => row.member_id === member.id && row.status === "paid"),
+    )
+    .map((member) => member.display_name);
 
   return (
     <div className="px-5 py-6">
@@ -76,6 +89,14 @@ export default async function GroupDetailPage({
           <p className="font-bold">{formatRupees(current?.pool_amount ?? 0)}</p>
         </Card>
       </div>
+
+      {isAdmin ? (
+        <Card className="mt-4 p-4">
+          <p className="text-sm font-semibold">
+            {t(locale, "joinedCount", { joined: joinedCount, total: members.length })}
+          </p>
+        </Card>
+      ) : null}
 
       <div className="mt-4 grid grid-cols-3 gap-2">
         <Link
@@ -134,6 +155,14 @@ export default async function GroupDetailPage({
         />
       )}
 
+      {canStartRound && isAdmin && current && !currentPayout ? (
+        <PostponeForm cycleId={current.id} groupId={group.id} currentDue={current.due_date} />
+      ) : null}
+
+      {current?.postpone_note ? (
+        <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{current.postpone_note}</p>
+      ) : null}
+
       <div className="mt-4 grid grid-cols-2 gap-3">
         <Button asChild variant="outline">
           <Link href={`/groups/${id}/grid`}>{t(locale, "whoPaid")}</Link>
@@ -149,6 +178,23 @@ export default async function GroupDetailPage({
             <Link href={`/groups/${id}/draw`}>{t(locale, "biddingSoon")}</Link>
           </Button>
         )}
+        <Button asChild variant="outline" className="col-span-2">
+          <Link href={`/groups/${id}/me`}>{t(locale, "yourStatement")}</Link>
+        </Button>
+        <div className="col-span-2">
+          <MeetingSlipButton
+            groupName={group.name}
+            cycleNumber={current?.cycle_number ?? 1}
+            dueDate={current?.due_date ?? group.start_date}
+            poolAmount={current?.pool_amount ?? 0}
+            haptaAmount={group.contribution_amount}
+            paid={paidNames}
+            due={unpaid.map((row) => ({ name: row.name, lateDays: row.lateDays }))}
+            eligible={eligibleNames}
+            alreadyWon={alreadyWonNames}
+            winnerName={winner?.display_name ?? null}
+          />
+        </div>
         <Button asChild variant="outline" className="col-span-2">
           <Link href={`/groups/${id}/reports`}>{t(locale, "memberStatements")}</Link>
         </Button>

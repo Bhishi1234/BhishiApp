@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { StatementButton } from "@/components/groups/statement-button";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { PageHeader } from "@/components/layout/page-header";
 import { formatRupees } from "@/lib/format";
@@ -34,6 +36,11 @@ export default async function ReportsPage({
         cycles={cycles}
         contributions={contributions}
       />
+      {bundle.membership ? (
+        <Button asChild variant="outline" className="mt-3 w-full">
+          <Link href={`/groups/${id}/me`}>{t(locale, "yourStatement")}</Link>
+        </Button>
+      ) : null}
 
       <div className="mt-5 space-y-3">
         {members.map((member) => {

@@ -7,6 +7,7 @@ import { claimHaptaAction, updateContributionAction } from "@/app/actions/contri
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useT } from "@/components/i18n/locale-provider";
+import { daysLate } from "@/lib/dates";
 import { formatDayMonth, formatRupees } from "@/lib/format";
 import type { Contribution, ContributionStatus, PaymentMode } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -41,6 +42,7 @@ export function ContributionCell({
   const paid = contribution.status === "paid";
   const partialPaid = contribution.status === "partial";
   const claimed = Boolean(contribution.member_claimed_at) && !paid && !partialPaid;
+  const lateDays = !paid && !partialPaid ? daysLate(dueDate) : 0;
   const tappable = canEdit || (canClaim && !paid && !claimed);
 
   const modes: { id: PaymentMode; label: string }[] = [
@@ -98,8 +100,8 @@ export function ContributionCell({
           "flex w-[7.75rem] shrink-0 flex-col rounded-2xl border-2 px-3 py-3 text-left shadow-[0_8px_20px_rgba(37,99,235,0.06)] transition",
           paid && "border-emerald-200 bg-emerald-50",
           (partialPaid || claimed) && !paid && "border-amber-200 bg-amber-50",
-          !paid && !partialPaid && !claimed && "border-border bg-white",
           highlight && "border-primary bg-[#eff6ff]",
+          !paid && !partialPaid && !claimed && lateDays > 0 && "border-red-200 bg-red-50",
           tappable && "active:scale-[0.98]",
           !tappable && "opacity-80",
         )}
@@ -115,7 +117,8 @@ export function ContributionCell({
             "mt-3 inline-flex min-h-8 items-center justify-center gap-1 rounded-full px-2 text-xs font-bold",
             paid && "bg-emerald-600 text-white",
             (partialPaid || claimed) && !paid && "bg-amber-500 text-white",
-            !paid && !partialPaid && !claimed && "bg-secondary text-foreground",
+            !paid && !partialPaid && !claimed && lateDays > 0 && "bg-red-600 text-white",
+            !paid && !partialPaid && !claimed && lateDays === 0 && "bg-secondary text-foreground",
           )}
         >
           {paid ? (
@@ -126,6 +129,8 @@ export function ContributionCell({
             formatRupees(contribution.amount_paid)
           ) : claimed ? (
             t("claimed")
+          ) : lateDays > 0 ? (
+            lateDays === 1 ? t("dayLate") : t("daysLate", { n: lateDays })
           ) : (
             <>
               <Clock className="size-3.5" /> {t("due")}

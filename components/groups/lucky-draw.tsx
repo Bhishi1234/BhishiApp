@@ -1,11 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { runLuckyDrawAction } from "@/app/actions/draw";
+import { ChitthiBox } from "@/components/groups/chitthi-box";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useT } from "@/components/i18n/locale-provider";
+import { createClient } from "@/lib/supabase/client";
 import type { GroupMember } from "@/lib/types";
 
 export function LuckyDraw({
@@ -15,6 +18,7 @@ export function LuckyDraw({
   eligible,
   alreadyWon,
   unpaidNames,
+  canDraw,
 }: {
   cycleId: string;
   groupId: string;
@@ -22,14 +26,54 @@ export function LuckyDraw({
   eligible: GroupMember[];
   alreadyWon: string[];
   unpaidNames: string[];
+  canDraw: boolean;
 }) {
   const { t } = useT();
+  const router = useRouter();
   const [spinning, setSpinning] = useState(false);
   const [displayName, setDisplayName] = useState(eligible[0]?.display_name ?? "—");
   const [winner, setWinner] = useState<string | null>(null);
 
   const names = useMemo(() => eligible.map((member) => member.display_name), [eligible]);
   const unpaidLabel = unpaidNames.join(", ");
+
+  useEffect(() => {
+    if (canDraw || winner) return;
+    const supabase = createClient();
+    const channel = supabase
+      .channel(`payouts-${cycleId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "payouts",
+          filter: `cycle_id=eq.${cycleId}`,
+        },
+        (payload) => {
+          const winnerId = (payload.new as { winner_member_id?: string }).winner_member_id;
+          const name =
+            eligible.find((member) => member.id === winnerId)?.display_name ?? names[0] ?? "—";
+          setSpinning(true);
+          const interval = window.setInterval(() => {
+            const next = names[Math.floor(Math.random() * names.length)];
+            if (next) setDisplayName(next);
+          }, 90);
+          window.setTimeout(() => {
+            window.clearInterval(interval);
+            setSpinning(false);
+            setDisplayName(name);
+            setWinner(name);
+            router.refresh();
+          }, 1600);
+        },
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [canDraw, cycleId, eligible, names, router, winner]);
 
   async function spin() {
     if (eligible.length === 0) {
@@ -59,6 +103,7 @@ export function LuckyDraw({
       }
       setDisplayName(result.result.winner_name);
       setWinner(result.result.winner_name);
+      router.refresh();
     }, 1600);
   }
 
@@ -67,42 +112,22 @@ export function LuckyDraw({
       <Card className="flex min-h-52 flex-col items-center justify-center bg-[radial-gradient(circle_at_top,#dbeafe,transparent_62%)] p-6 text-center">
         <p className="text-sm font-semibold text-primary">{t("monthN", { n: cycleNumber })}</p>
         <p className="mt-1 text-sm font-semibold text-muted-foreground">
-          {spinning ? t("drawing") : winner ? t("winnerLocked") : t("drawReady")}
+          {spinning
+            ? t("drawing")
+            : winner
+              ? t("winnerLocked")
+              : canDraw
+                ? t("drawReady")
+                : t("watchingDraw")}
         </p>
         <p className="mt-3 text-4xl font-bold tracking-tight">{displayName}</p>
+        {!canDraw && !winner ? (
+          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{t("watchingDrawBody")}</p>
+        ) : null}
       </Card>
 
-      <div className="rounded-3xl border-2 border-dashed border-primary/30 bg-[#eff6ff] p-4">
-        <p className="text-sm font-semibold text-primary">
-          {t("inTheBox")} · {eligible.length}
-        </p>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {eligible.map((member) => (
-            <span
-              key={member.id}
-              className="rounded-full bg-white px-3 py-1.5 text-sm font-semibold shadow-[0_4px_12px_rgba(37,99,235,0.08)]"
-            >
-              {member.display_name}
-            </span>
-          ))}
-        </div>
-      </div>
-
-      {alreadyWon.length > 0 ? (
-        <div>
-          <p className="text-sm font-semibold">{t("alreadyReceived")}</p>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {alreadyWon.map((name) => (
-              <span
-                key={name}
-                className="rounded-full bg-secondary px-3 py-1.5 text-sm text-muted-foreground"
-              >
-                {name}
-              </span>
-            ))}
-          </div>
-        </div>
-      ) : null}
+      <ChitthiBox title={t("inTheBox")} names={names} />
+      <ChitthiBox title={t("alreadyReceived")} names={alreadyWon} muted />
 
       {unpaidNames.length > 0 && !winner ? (
         <p className="rounded-2xl bg-amber-50 px-3 py-2 text-sm leading-relaxed text-amber-900">
@@ -112,11 +137,11 @@ export function LuckyDraw({
 
       {winner ? (
         <p className="text-center text-sm font-semibold text-primary">{t("lockedUntilNext")}</p>
-      ) : (
+      ) : canDraw ? (
         <Button className="w-full" size="lg" onClick={spin} disabled={spinning || eligible.length === 0}>
           {spinning ? t("drawing") : t("drawChitthi")}
         </Button>
-      )}
+      ) : null}
       <p className="text-center text-xs text-muted-foreground">{t("oneDraw")}</p>
     </div>
   );

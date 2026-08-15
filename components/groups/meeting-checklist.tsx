@@ -19,6 +19,7 @@ export type MeetingUnpaid = {
   name: string;
   phone: string | null;
   claimed: boolean;
+  lateDays: number;
 };
 
 export function MeetingChecklist({
@@ -140,7 +141,13 @@ export function MeetingChecklist({
                     <div>
                       <p className="font-semibold">{row.name}</p>
                       <p className="text-xs font-semibold text-muted-foreground">
-                        {row.claimed ? t("claimed") : t("due")}
+                        {row.claimed
+                          ? t("claimed")
+                          : row.lateDays > 0
+                            ? row.lateDays === 1
+                              ? t("dayLate")
+                              : t("daysLate", { n: row.lateDays })
+                            : t("due")}
                       </p>
                     </div>
                     <div className="flex gap-2">

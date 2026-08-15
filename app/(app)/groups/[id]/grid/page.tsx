@@ -58,6 +58,7 @@ export default async function GridPage({
       <div className="mb-4 flex flex-wrap gap-2 text-xs font-semibold">
         <Badge className="bg-emerald-50 text-emerald-800">{t(locale, "paid")}</Badge>
         <Badge className="bg-amber-50 text-amber-800">{t(locale, "claimed")}</Badge>
+        <Badge className="bg-red-50 text-red-800">{t(locale, "dayLate")}</Badge>
         <Badge>{t(locale, "due")}</Badge>
       </div>
 

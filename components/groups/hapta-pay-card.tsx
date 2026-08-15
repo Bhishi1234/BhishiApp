@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { toast } from "sonner";
 import { claimHaptaAction } from "@/app/actions/contributions";
 import { Button } from "@/components/ui/button";
@@ -151,6 +152,9 @@ export function HaptaPayCard({
             </div>
           </>
         )}
+        <Button asChild variant="ghost" className="w-full">
+          <Link href={`/groups/${groupId}/me`}>{t("yourStatement")}</Link>
+        </Button>
       </div>
     </Card>
   );

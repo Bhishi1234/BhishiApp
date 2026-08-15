@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { LuckyDraw } from "@/components/groups/lucky-draw";
+import { ChitthiBox } from "@/components/groups/chitthi-box";
+import { PostponeForm } from "@/components/groups/postpone-form";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { PageHeader } from "@/components/layout/page-header";
@@ -29,6 +31,9 @@ export default async function DrawPage({
     .map((member) => member.display_name);
   const existing = current ? payouts.find((row) => row.cycle_id === current.id) : undefined;
   const winner = members.find((member) => member.id === existing?.winner_member_id);
+  const frozenNames = (existing?.eligible_member_ids ?? [])
+    .map((memberId) => members.find((member) => member.id === memberId)?.display_name)
+    .filter((name): name is string => Boolean(name));
   const currentContributions = contributions.filter((row) => row.cycle_id === current?.id);
   const unpaidNames = members
     .filter((member) =>
@@ -59,15 +64,19 @@ export default async function DrawPage({
           </Button>
         </Card>
       ) : existing ? (
-        <Card className="p-5 text-center">
-          <p className="text-sm font-semibold text-primary">
-            {t(locale, "monthLocked", { n: current?.cycle_number ?? 1 })}
-          </p>
-          <p className="mt-2 text-4xl font-bold">{winner?.display_name}</p>
-          <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
-            {t(locale, "lockedUntilNext")}
-          </p>
-        </Card>
+        <div className="space-y-4">
+          <Card className="p-5 text-center">
+            <p className="text-sm font-semibold text-primary">
+              {t(locale, "monthLocked", { n: current?.cycle_number ?? 1 })}
+            </p>
+            <p className="mt-2 text-4xl font-bold">{winner?.display_name}</p>
+            <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
+              {t(locale, "lockedUntilNext")}
+            </p>
+          </Card>
+          <ChitthiBox title={t(locale, "frozenBox")} names={frozenNames.length ? frozenNames : eligible.map((m) => m.display_name)} />
+          <ChitthiBox title={t(locale, "alreadyReceived")} names={alreadyWon} muted />
+        </div>
       ) : !meeting.canDraw ? (
         <Card className="p-5">
           <p className="text-sm font-semibold text-primary">{meeting.label}</p>
@@ -77,23 +86,34 @@ export default async function DrawPage({
           <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
             {t(locale, "drawWaitBody")}
           </p>
+          <div className="mt-4 space-y-3">
+            <ChitthiBox title={t(locale, "inTheBox")} names={eligible.map((member) => member.display_name)} />
+            <ChitthiBox title={t(locale, "alreadyReceived")} names={alreadyWon} muted />
+          </div>
           <Button asChild variant="outline" className="mt-4 w-full">
             <Link href={`/groups/${id}/grid`}>{t(locale, "markThisHapta")}</Link>
           </Button>
+          {isAdmin && current ? (
+            <PostponeForm cycleId={current.id} groupId={group.id} currentDue={current.due_date} />
+          ) : null}
         </Card>
-      ) : !isAdmin ? (
-        <Card className="p-5">{t(locale, "onlyOrganiserDraw")}</Card>
       ) : !current ? (
         <Card className="p-5">{t(locale, "quietAlerts")}</Card>
       ) : (
-        <LuckyDraw
-          cycleId={current.id}
-          groupId={group.id}
-          cycleNumber={current.cycle_number}
-          eligible={eligible}
-          alreadyWon={alreadyWon}
-          unpaidNames={unpaidNames}
-        />
+        <>
+          <LuckyDraw
+            cycleId={current.id}
+            groupId={group.id}
+            cycleNumber={current.cycle_number}
+            eligible={eligible}
+            alreadyWon={alreadyWon}
+            unpaidNames={unpaidNames}
+            canDraw={isAdmin}
+          />
+          {isAdmin ? (
+            <PostponeForm cycleId={current.id} groupId={group.id} currentDue={current.due_date} />
+          ) : null}
+        </>
       )}
     </div>
   );

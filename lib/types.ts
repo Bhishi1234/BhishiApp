@@ -50,6 +50,7 @@ export type Cycle = {
   due_date: string;
   pool_amount: number | string;
   status: CycleStatus;
+  postpone_note?: string | null;
 };
 
 export type Contribution = {
