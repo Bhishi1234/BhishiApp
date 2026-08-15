@@ -594,7 +594,8 @@ begin
   limit 1;
 
   if v_token is null then
-    v_token := encode(gen_random_bytes(16), 'hex');
+    v_token := md5(random()::text || clock_timestamp()::text || p_group_id::text)
+      || md5(random()::text || clock_timestamp()::text);
     insert into public.invites (group_id, token)
     values (p_group_id, v_token);
   end if;
