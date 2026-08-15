@@ -1,0 +1,47 @@
+export function formatRupees(amount: number | string | null | undefined) {
+  const value = Number(amount ?? 0);
+  return new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: value % 1 === 0 ? 0 : 2,
+  }).format(value);
+}
+
+export function formatDate(value: string | Date | null | undefined) {
+  if (!value) return "—";
+  const date = typeof value === "string" ? new Date(value) : value;
+  if (Number.isNaN(date.getTime())) return "—";
+  return new Intl.DateTimeFormat("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }).format(date);
+}
+
+export function digitsOnly(phone: string) {
+  return phone.replace(/\D/g, "");
+}
+
+export function formatPhone(phone: string | null | undefined) {
+  if (!phone) return "—";
+  const digits = digitsOnly(phone);
+  if (digits.length === 10) return `+91 ${digits.slice(0, 5)} ${digits.slice(5)}`;
+  if (digits.length === 12 && digits.startsWith("91")) {
+    return `+91 ${digits.slice(2, 7)} ${digits.slice(7)}`;
+  }
+  return phone;
+}
+
+export function groupTypeLabel(type: string) {
+  if (type === "lucky_draw") return "Lucky Draw";
+  if (type === "bidding") return "Bidding";
+  if (type === "loan") return "Loan";
+  return type;
+}
+
+export function groupTypeHindi(type: string) {
+  if (type === "lucky_draw") return "चिठ्ठी भिशी";
+  if (type === "bidding") return "लिलाव भिशी";
+  if (type === "loan") return "कर्ज भिशी";
+  return "";
+}
