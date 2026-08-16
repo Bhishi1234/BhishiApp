@@ -5,6 +5,7 @@ import { HowBhishiWorks } from "@/components/groups/how-bhishi-works";
 import { InviteButton } from "@/components/groups/invite-button";
 import { MeetingChecklist } from "@/components/groups/meeting-checklist";
 import { MeetingSlipButton } from "@/components/groups/meeting-slip-button";
+import { PayoutAcceptCard } from "@/components/groups/payout-accept";
 import { PostponeForm } from "@/components/groups/postpone-form";
 import { ReminderButton } from "@/components/groups/reminder-button";
 import { Button } from "@/components/ui/button";
@@ -15,7 +16,7 @@ import { daysLate } from "@/lib/dates";
 import { formatDate, formatRupees, groupTypeHindi, groupTypeLabel, seatName } from "@/lib/format";
 import { getGroupBundle } from "@/lib/group-data";
 import { parseLocale, t } from "@/lib/i18n";
-import { groupByPerson } from "@/lib/people";
+import { groupByPerson, transferRecipients } from "@/lib/people";
 
 export default async function GroupDetailPage({
   params,
@@ -26,7 +27,7 @@ export default async function GroupDetailPage({
   const bundle = await getGroupBundle(id);
   if (!bundle) notFound();
 
-  const { group, members, cycles, contributions, payouts, isAdmin, isOwner, organiser, profile } = bundle;
+  const { group, members, cycles, contributions, payouts, isAdmin, isOwner, organiser, profile, mySeats } = bundle;
   const locale = parseLocale(profile?.locale);
   const meeting = getMeetingState(cycles, payouts, group.frequency, group.type);
   const current = meeting.cycle;
@@ -60,6 +61,17 @@ export default async function GroupDetailPage({
   const unpaidMembers = unpaid.map((row) => ({ name: row.name, phone: row.phone }));
   const currentPayout = payouts.find((row) => row.cycle_id === current?.id);
   const winner = members.find((member) => member.id === currentPayout?.winner_member_id);
+  const drawnId = currentPayout?.drawn_member_id ?? currentPayout?.winner_member_id;
+  const drawnMember = members.find((member) => member.id === drawnId);
+  const acceptStatus = currentPayout?.acceptance_status ?? "accepted";
+  const canActOnPayout = Boolean(
+    mySeats.some((seat) => seat.id === drawnId) || (isAdmin && !drawnMember?.user_id),
+  );
+  const pastWonIds = new Set(
+    payouts.filter((row) => row.cycle_id !== current?.id).map((row) => row.winner_member_id),
+  );
+  const allotRecipients = transferRecipients(members, drawnMember, pastWonIds);
+  const payoutSettled = acceptStatus === "accepted" || acceptStatus === "transferred";
   const canStartRound = members.length >= 2;
   const timeline = winnersTimeline(cycles, payouts, members);
   const organiserUpi = organiser?.upi_id;
@@ -162,8 +174,13 @@ export default async function GroupDetailPage({
           isAdmin={isAdmin}
           canDraw={meeting.canDraw}
           drawn={Boolean(currentPayout)}
-          winnerName={winner ? seatName(winner) : null}
+          winnerName={
+            payoutSettled
+              ? winner?.display_name ?? null
+              : drawnMember?.display_name ?? winner?.display_name ?? null
+          }
           payoutPending={currentPayout?.status === "pending"}
+          payoutAcceptance={group.type === "lucky_draw" ? acceptStatus : "accepted"}
           cycleId={currentPayout?.cycle_id ?? current?.id ?? null}
           upiId={organiserUpi}
           meetingLabel={meeting.label}
@@ -174,6 +191,19 @@ export default async function GroupDetailPage({
           canRemind={isOwner}
         />
       )}
+
+      {canStartRound && group.type === "lucky_draw" && currentPayout ? (
+        <div className="mt-4">
+          <PayoutAcceptCard
+            payout={currentPayout}
+            members={members}
+            recipients={allotRecipients}
+            groupId={group.id}
+            canAct={canActOnPayout}
+            isAdmin={isAdmin}
+          />
+        </div>
+      ) : null}
 
       {canStartRound && isAdmin && current && !currentPayout ? (
         <PostponeForm cycleId={current.id} groupId={group.id} currentDue={current.due_date} />

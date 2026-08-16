@@ -12,6 +12,7 @@ import { getMeetingState } from "@/lib/cycle";
 import { formatDate, seatName } from "@/lib/format";
 import { getGroupBundle } from "@/lib/group-data";
 import { parseLocale, t } from "@/lib/i18n";
+import { transferRecipients } from "@/lib/people";
 
 export default async function DrawPage({
   params,
@@ -45,9 +46,15 @@ export default async function DrawPage({
     .map((member) => seatName(member));
   const currentBids = bids.filter((bid) => bid.cycle_id === current?.id);
   const drawnId = existing?.drawn_member_id ?? existing?.winner_member_id;
+  const drawnMember = members.find((member) => member.id === drawnId);
   const canActOnPayout = Boolean(
-    isAdmin || mySeats.some((seat) => seat.id === drawnId),
+    mySeats.some((seat) => seat.id === drawnId) || (isAdmin && !drawnMember?.user_id),
   );
+  const pastWonIds = new Set(
+    payouts.filter((row) => row.cycle_id !== current?.id).map((row) => row.winner_member_id),
+  );
+  const allotRecipients = transferRecipients(members, drawnMember, pastWonIds);
+  const acceptStatus = existing?.acceptance_status ?? "accepted";
 
   if (group.type === "bidding") {
     return (
@@ -106,16 +113,27 @@ export default async function DrawPage({
         <div className="space-y-4">
           <Card className="p-5 text-center">
             <p className="text-sm font-semibold text-primary">
-              {t(locale, "monthLocked", { n: current?.cycle_number ?? 1 })}
+              {acceptStatus === "pending_accept" || acceptStatus === "transfer_requested"
+                ? t(locale, "drawnWinner", { name: drawnMember?.display_name ?? winner?.display_name ?? "—" })
+                : t(locale, "monthLocked", { n: current?.cycle_number ?? 1 })}
             </p>
-            <p className="mt-2 text-4xl font-bold">{winner ? seatName(winner) : "—"}</p>
+            <p className="mt-2 text-4xl font-bold">
+              {(drawnMember ?? winner)?.display_name ?? "—"}
+            </p>
             <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
-              {t(locale, "lockedUntilNext")}
+              {acceptStatus === "pending_accept"
+                ? t(locale, "waitingWinnerDecide", {
+                    name: drawnMember?.display_name ?? winner?.display_name ?? "—",
+                  })
+                : acceptStatus === "transfer_requested"
+                  ? t(locale, "transferPending")
+                  : t(locale, "lockedUntilNext")}
             </p>
           </Card>
           <PayoutAcceptCard
             payout={existing}
             members={members}
+            recipients={allotRecipients}
             groupId={group.id}
             canAct={canActOnPayout}
             isAdmin={isAdmin}

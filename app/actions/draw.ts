@@ -5,6 +5,7 @@ import { istInputToIso } from "@/lib/ist";
 import { createClient } from "@/lib/supabase/server";
 
 function refreshDraw(groupId: string) {
+  revalidatePath("/groups");
   revalidatePath(`/groups/${groupId}`);
   revalidatePath(`/groups/${groupId}/draw`);
   revalidatePath("/alerts");

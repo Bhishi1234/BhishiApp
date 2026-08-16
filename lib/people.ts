@@ -65,3 +65,19 @@ export function combineCycleContributions(rows: Contribution[]): Contribution | 
     payment_mode: rows.find((row) => row.payment_mode)?.payment_mode ?? null,
   };
 }
+
+export function transferRecipients(
+  members: GroupMember[],
+  drawn: Pick<GroupMember, "id" | "user_id" | "phone"> | undefined,
+  alreadyWonIds: Set<string>,
+) {
+  const drawnKey = drawn ? personKey(drawn) : "";
+  return groupByPerson(members)
+    .filter((person) => person.key !== drawnKey)
+    .map((person) => {
+      const seat = person.seats.find((item) => !alreadyWonIds.has(item.id));
+      if (!seat) return null;
+      return { id: seat.id, name: person.display_name };
+    })
+    .filter((row): row is { id: string; name: string } => Boolean(row));
+}

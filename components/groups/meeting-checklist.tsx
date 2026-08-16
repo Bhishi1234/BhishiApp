@@ -50,6 +50,7 @@ export function MeetingChecklist({
   bidPayout = null,
   poolAmount = 0,
   canRemind = false,
+  payoutAcceptance = "accepted",
 }: {
   groupId: string;
   groupName: string;
@@ -74,6 +75,7 @@ export function MeetingChecklist({
   bidPayout?: import("@/lib/types").Payout | null;
   poolAmount?: number | string;
   canRemind?: boolean;
+  payoutAcceptance?: import("@/lib/types").PayoutAcceptance;
 }) {
   const { t, locale } = useT();
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -104,7 +106,8 @@ export function MeetingChecklist({
 
   const collectDone = unpaid.length === 0;
   const drawDone = drawn;
-  const handoverDone = drawn && !payoutPending;
+  const handoverDone =
+    drawn && !payoutPending && payoutAcceptance !== "pending_accept" && payoutAcceptance !== "transfer_requested";
   const isBidding = groupType === "bidding";
 
   return (
@@ -213,6 +216,12 @@ export function MeetingChecklist({
               <div className="mt-3">
                 <BidResultCard payout={bidPayout} poolAmount={poolAmount} winnerName={winnerName} />
               </div>
+            ) : winnerName && payoutAcceptance === "pending_accept" ? (
+              <p className="mt-2 rounded-xl bg-accent/70 px-3 py-2 font-semibold">
+                {t("waitingWinnerDecide", { name: winnerName })}
+              </p>
+            ) : winnerName && payoutAcceptance === "transfer_requested" ? (
+              <p className="mt-2 rounded-xl bg-accent/70 px-3 py-2 font-semibold">{t("transferPending")}</p>
             ) : winnerName ? (
               <p className="mt-2 rounded-xl bg-accent/70 px-3 py-2 font-semibold">
                 {t("receivedPool", { name: winnerName })}
@@ -228,13 +237,21 @@ export function MeetingChecklist({
 
           <li>
             <ChecklistTitle done={handoverDone} title={t("stepHandover")} />
-            {payoutPending && cycleId && isAdmin ? (
+            {payoutPending && cycleId && isAdmin && (payoutAcceptance === "accepted" || payoutAcceptance === "transferred") ? (
               <PayoutForm cycleId={cycleId} groupId={groupId} />
             ) : handoverDone ? (
               <p className="mt-2 text-sm font-semibold text-emerald-700">{t("handoverSaved")}</p>
             ) : (
               <p className="mt-2 text-sm text-muted-foreground">
-                {drawDone ? t("markPoolHanded") : isBidding ? t("stepLilav") : t("stepDraw")}
+                {drawDone && payoutAcceptance === "pending_accept"
+                  ? t("waitingWinnerDecide", { name: winnerName ?? "" })
+                  : drawDone && payoutAcceptance === "transfer_requested"
+                    ? t("transferPending")
+                    : drawDone
+                      ? t("markPoolHanded")
+                      : isBidding
+                        ? t("stepLilav")
+                        : t("stepDraw")}
               </p>
             )}
           </li>

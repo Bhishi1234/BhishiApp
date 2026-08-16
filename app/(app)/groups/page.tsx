@@ -146,6 +146,33 @@ export default async function GroupsPage() {
     ];
   });
 
+  const chitthiCards = groupRows.flatMap((group) => {
+    if (group.type !== "lucky_draw") return [];
+    const mine = members.filter((row) => row.group_id === group.id && row.user_id === user?.id);
+    if (mine.length === 0) return [];
+    const groupCycles = cycles.filter((cycle) => cycle.group_id === group.id);
+    const groupPayouts = payouts.filter((payout) =>
+      groupCycles.some((cycle) => cycle.id === payout.cycle_id),
+    );
+    const meeting = getMeetingState(groupCycles, groupPayouts, group.frequency, group.type);
+    const payout = groupPayouts.find((row) => row.cycle_id === meeting.cycle?.id);
+    if (!payout) return [];
+    const status = payout.acceptance_status ?? "accepted";
+    if (status !== "pending_accept" && status !== "transfer_requested") return [];
+    const groupMembers = members.filter((row) => row.group_id === group.id);
+    const drawnId = payout.drawn_member_id ?? payout.winner_member_id;
+    const winner = groupMembers.find((row) => row.id === drawnId);
+    return [
+      {
+        group,
+        status,
+        winnerName: winner?.display_name ?? "Member",
+        isWinner: mine.some((seat) => seat.id === drawnId),
+        isAdmin: mine.some((seat) => seat.role === "admin" || seat.role === "co_admin"),
+      },
+    ];
+  });
+
   return (
     <div className="px-5 py-6">
       <div className="mb-5">
@@ -174,6 +201,39 @@ export default async function GroupsPage() {
             <p className="mt-2 text-sm text-muted-foreground">{nextDraw.meeting.detail}</p>
           </div>
         </Card>
+      ) : null}
+
+      {chitthiCards.length > 0 ? (
+        <div className="mb-6 space-y-3">
+          {chitthiCards.map((row) => (
+            <Card key={row.group.id} className="overflow-hidden p-0">
+              <div className="panel-hero px-5 py-4">
+                <p className="text-sm font-semibold text-primary">{row.group.name}</p>
+                <h2 className="mt-1 text-xl font-bold">
+                  {t(locale, "drawnWinner", { name: row.winnerName })}
+                </h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {row.status === "transfer_requested"
+                    ? t(locale, "transferPending")
+                    : row.isWinner
+                      ? t(locale, "acceptHelp")
+                      : t(locale, "waitingWinnerDecide", { name: row.winnerName })}
+                </p>
+              </div>
+              <div className="p-5">
+                <Button asChild className="w-full">
+                  <Link href={`/groups/${row.group.id}`}>
+                    {row.status === "transfer_requested" && row.isAdmin
+                      ? t(locale, "approveTransfer")
+                      : row.isWinner
+                        ? t(locale, "acceptPool")
+                        : t(locale, "chitthi")}
+                  </Link>
+                </Button>
+              </div>
+            </Card>
+          ))}
+        </div>
       ) : null}
 
       {haptaCards.length > 0 ? (

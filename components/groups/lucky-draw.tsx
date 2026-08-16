@@ -106,6 +106,7 @@ export function LuckyDraw({
       }
       setDisplayName(result.result.winner_name);
       setWinner(result.result.winner_name);
+      toast.success(t("waitingWinnerDecide", { name: result.result.winner_name }));
       router.refresh();
     }, 1600);
   }
