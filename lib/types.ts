@@ -118,6 +118,19 @@ export type GroupSettings = {
   self_serve_paid: boolean;
 };
 
+export type HandRequest = {
+  id: string;
+  group_id: string;
+  user_id: string;
+  member_id: string;
+  requested_hands: number;
+  current_hands: number;
+  status: "pending" | "approved" | "declined";
+  created_at: string;
+  decided_at: string | null;
+  decided_by: string | null;
+};
+
 export type PhoneInvite = {
   member_id: string;
   group_id: string;

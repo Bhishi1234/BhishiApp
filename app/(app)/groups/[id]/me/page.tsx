@@ -19,7 +19,7 @@ export default async function MyStatementPage({
 
   const { group, cycles, contributions, payouts, profile, mySeats } = bundle;
   const locale = parseLocale(profile?.locale);
-  const meeting = getMeetingState(cycles, payouts, group.frequency);
+  const meeting = getMeetingState(cycles, payouts, group.frequency, group.type);
   const current = meeting.cycle;
 
   return (

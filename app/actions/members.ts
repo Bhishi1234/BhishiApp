@@ -101,6 +101,38 @@ export async function replaceMemberAction(input: {
   return { success: true };
 }
 
+export async function requestHandsAction(groupId: string, requestedHands: number) {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("request_hands", {
+    p_group_id: groupId,
+    p_requested_hands: requestedHands,
+  });
+  if (error) return { error: error.message };
+  revalidatePath(`/groups/${groupId}`);
+  revalidatePath(`/groups/${groupId}/members`);
+  revalidatePath("/alerts");
+  return { success: true };
+}
+
+export async function decideHandRequestAction(input: {
+  requestId: string;
+  groupId: string;
+  approve: boolean;
+}) {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("decide_hand_request", {
+    p_request_id: input.requestId,
+    p_approve: input.approve,
+  });
+  if (error) return { error: error.message };
+  revalidatePath(`/groups/${input.groupId}`);
+  revalidatePath(`/groups/${input.groupId}/members`);
+  revalidatePath(`/groups/${input.groupId}/grid`);
+  revalidatePath("/groups");
+  revalidatePath("/alerts");
+  return { success: true };
+}
+
 export async function setCoAdminAction(input: {
   memberId: string;
   groupId: string;

@@ -27,7 +27,7 @@ export default async function GroupDetailPage({
 
   const { group, members, cycles, contributions, payouts, isAdmin, organiser, profile } = bundle;
   const locale = parseLocale(profile?.locale);
-  const meeting = getMeetingState(cycles, payouts, group.frequency);
+  const meeting = getMeetingState(cycles, payouts, group.frequency, group.type);
   const current = meeting.cycle;
   const currentContributions = contributions.filter((row) => row.cycle_id === current?.id);
   const paidCount = currentContributions.filter((row) => row.status === "paid").length;
@@ -152,6 +152,9 @@ export default async function GroupDetailPage({
           upiId={organiserUpi}
           meetingLabel={meeting.label}
           meetingDetail={meeting.detail}
+          groupType={group.type}
+          bidPayout={group.type === "bidding" ? currentPayout ?? null : null}
+          poolAmount={current?.pool_amount ?? 0}
         />
       )}
 
@@ -164,7 +167,7 @@ export default async function GroupDetailPage({
       ) : null}
 
       <div className="mt-4 grid grid-cols-2 gap-3">
-        <Button asChild variant="outline">
+        <Button asChild variant="outline" className={group.type === "bidding" ? "col-span-2" : undefined}>
           <Link href={`/groups/${id}/grid`}>{t(locale, "whoPaid")}</Link>
         </Button>
         {group.type === "lucky_draw" ? (
@@ -173,11 +176,7 @@ export default async function GroupDetailPage({
               {meeting.canDraw ? t(locale, "drawChitthi") : t(locale, "chitthi")}
             </Link>
           </Button>
-        ) : (
-          <Button asChild>
-            <Link href={`/groups/${id}/draw`}>{t(locale, "biddingTitle")}</Link>
-          </Button>
-        )}
+        ) : null}
         <Button asChild variant="outline" className="col-span-2">
           <Link href={`/groups/${id}/me`}>{t(locale, "yourStatement")}</Link>
         </Button>
@@ -209,15 +208,26 @@ export default async function GroupDetailPage({
             {t(locale, "whoReceived")}
           </h3>
           <div className="mt-3 space-y-2">
-            {timeline.map(({ cycle, winner: person }) => (
-              <Card key={cycle.id} className="flex items-center justify-between px-4 py-3">
-                <div>
-                  <p className="font-semibold">{person ? seatName(person) : t(locale, "members")}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {t(locale, "monthN", { n: cycle.cycle_number })} · {formatDate(cycle.due_date, locale)}
-                  </p>
+            {timeline.map(({ cycle, payout, winner: person }) => (
+              <Card key={cycle.id} className="px-4 py-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="font-semibold">{person ? seatName(person) : t(locale, "members")}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {t(locale, "monthN", { n: cycle.cycle_number })} · {formatDate(cycle.due_date, locale)}
+                    </p>
+                  </div>
+                  <span className="text-xs font-semibold text-primary">{t(locale, "won")}</span>
                 </div>
-                <span className="text-xs font-semibold text-primary">{t(locale, "won")}</span>
+                {payout?.method === "bid" ? (
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                    {t(locale, "winnerGets", {
+                      amount: formatRupees(Number(cycle.pool_amount) - Number(payout.bid_discount ?? 0)),
+                    })}
+                    {" · "}
+                    {t(locale, "eachOtherGets", { amount: formatRupees(payout.bonus_per_member ?? 0) })}
+                  </p>
+                ) : null}
               </Card>
             ))}
           </div>
@@ -227,7 +237,7 @@ export default async function GroupDetailPage({
           <h3 className="mb-3 text-sm font-semibold tracking-wide text-muted-foreground uppercase">
             {t(locale, "howItWorks")}
           </h3>
-          <HowBhishiWorks compact />
+          <HowBhishiWorks compact groupType={group.type} />
         </div>
       )}
     </div>

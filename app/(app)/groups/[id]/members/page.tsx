@@ -2,8 +2,10 @@ import { notFound } from "next/navigation";
 import { AddHandButton } from "@/components/groups/add-hand-button";
 import { AddMemberForm } from "@/components/groups/add-member-form";
 import { CoAdminButton } from "@/components/groups/co-admin-button";
+import { HandRequestList } from "@/components/groups/hand-request-list";
 import { LeaveGroupButton, ReplaceMemberForm } from "@/components/groups/member-lifecycle";
 import { NudgeJoinButton } from "@/components/groups/nudge-join-button";
+import { RequestHandsForm } from "@/components/groups/request-hands-form";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -26,6 +28,11 @@ export default async function MembersPage({
   const wonIds = new Set(bundle.payouts.map((row) => row.winner_member_id));
   const joinedCount = bundle.members.filter((member) => member.user_id).length;
   const canAddHand = bundle.members.length < bundle.group.planned_member_count;
+  const myHands = bundle.mySeats.length;
+  const remainingSeats = bundle.group.planned_member_count - bundle.members.length;
+  const myPending = bundle.handRequests.find(
+    (row) => row.user_id === bundle.user.id && row.status === "pending",
+  );
 
   return (
     <div className="px-5 py-6">
@@ -50,6 +57,36 @@ export default async function MembersPage({
             </p>
             <p className="mt-1 text-sm text-muted-foreground">{t(locale, "coAdminHelp")}</p>
           </div>
+        </Card>
+      ) : null}
+
+      {bundle.isAdmin ? (
+        <HandRequestList
+          requests={bundle.handRequests}
+          members={bundle.members}
+          groupId={id}
+        />
+      ) : null}
+
+      {myHands > 0 && remainingSeats > 0 && !myPending ? (
+        <div className="mb-4">
+          <RequestHandsForm
+            groupId={id}
+            currentHands={myHands}
+            maxHands={myHands + remainingSeats}
+          />
+        </div>
+      ) : null}
+      {myPending ? (
+        <Card className="mb-4 p-4">
+          <p className="text-sm font-semibold text-primary">{t(locale, "requestPending")}</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {t(locale, "handRequestLine", {
+              name: bundle.profile?.full_name || "You",
+              want: myPending.requested_hands,
+              have: myPending.current_hands,
+            })}
+          </p>
         </Card>
       ) : null}
 

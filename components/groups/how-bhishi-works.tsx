@@ -3,14 +3,28 @@
 import { Card } from "@/components/ui/card";
 import { useT } from "@/components/i18n/locale-provider";
 
-export function HowBhishiWorks({ compact = false }: { compact?: boolean }) {
+export function HowBhishiWorks({
+  compact = false,
+  groupType = "lucky_draw",
+}: {
+  compact?: boolean;
+  groupType?: "lucky_draw" | "bidding" | "loan";
+}) {
   const { t } = useT();
-  const steps = [
-    { title: t("howPayHapta"), body: t("howPayHaptaBody") },
-    { title: t("howDraw"), body: t("howDrawBody") },
-    { title: t("howWinner"), body: t("howWinnerBody") },
-    { title: t("howEveryone"), body: t("howEveryoneBody") },
-  ];
+  const steps =
+    groupType === "bidding"
+      ? [
+          { title: t("howPayHapta"), body: t("howPayHaptaBody") },
+          { title: t("howLilav"), body: t("howLilavBody") },
+          { title: t("howBidWin"), body: t("howBidWinBody") },
+          { title: t("howBidShare"), body: t("howBidShareBody") },
+        ]
+      : [
+          { title: t("howPayHapta"), body: t("howPayHaptaBody") },
+          { title: t("howDraw"), body: t("howDrawBody") },
+          { title: t("howWinner"), body: t("howWinnerBody") },
+          { title: t("howEveryone"), body: t("howEveryoneBody") },
+        ];
 
   return (
     <div className={compact ? "space-y-2" : "space-y-3"}>

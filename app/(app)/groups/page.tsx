@@ -101,6 +101,7 @@ export default async function GroupsPage() {
           cycles.some((cycle) => cycle.group_id === group.id && cycle.id === payout.cycle_id),
         ),
         group.frequency,
+        group.type,
       );
       return { group, meeting };
     })
@@ -117,6 +118,7 @@ export default async function GroupsPage() {
         cycles.some((cycle) => cycle.group_id === group.id && cycle.id === payout.cycle_id),
       ),
       group.frequency,
+      group.type,
     );
     const cycle = meeting.cycle;
     if (!cycle) return [];
@@ -158,7 +160,9 @@ export default async function GroupsPage() {
       {nextDraw ? (
         <Card className="mb-5 overflow-hidden p-0">
           <div className="panel-hero px-5 py-5">
-            <p className="text-sm font-semibold text-primary">{t(locale, "nextChitthi")}</p>
+            <p className="text-sm font-semibold text-primary">
+              {t(locale, nextDraw.group.type === "bidding" ? "nextLilav" : "nextChitthi")}
+            </p>
             <h2 className="mt-1 text-2xl font-bold">{formatDate(nextDraw.meeting.cycle?.due_date, locale)}</h2>
             <p className="mt-1 text-sm text-muted-foreground">
               {nextDraw.group.name} · {nextDraw.meeting.label}
@@ -227,7 +231,7 @@ export default async function GroupsPage() {
             const groupPayouts = payouts.filter((payout) =>
               groupCycles.some((cycle) => cycle.id === payout.cycle_id),
             );
-            const meeting = getMeetingState(groupCycles, groupPayouts, group.frequency);
+            const meeting = getMeetingState(groupCycles, groupPayouts, group.frequency, group.type);
             const drawnCount = groupPayouts.length;
             const progress = group.planned_member_count
               ? (drawnCount / group.planned_member_count) * 100

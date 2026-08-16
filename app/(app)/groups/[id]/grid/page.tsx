@@ -20,7 +20,7 @@ export default async function GridPage({
   const { group, members, cycles, contributions, payouts, isAdmin, settings, profile, mySeats } =
     bundle;
   const locale = parseLocale(profile?.locale);
-  const meeting = getMeetingState(cycles, payouts, group.frequency);
+  const meeting = getMeetingState(cycles, payouts, group.frequency, group.type);
   const currentId = meeting.cycle?.id;
   const currentContributions = contributions.filter((row) => row.cycle_id === currentId);
   const paidThisMonth = currentContributions.filter((row) => row.status === "paid").length;

@@ -10,7 +10,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { useT } from "@/components/i18n/locale-provider";
-import { formatDateTime, formatRupees, seatName, toDateTimeLocal } from "@/lib/format";
+import { BidResultCard } from "@/components/groups/bid-result-card";
+import { formatRupees, seatName } from "@/lib/format";
+import { defaultIstWindow, formatIstDateTime, nowIstLabel, toIstInput } from "@/lib/ist";
 import { createClient } from "@/lib/supabase/client";
 import type { Bid, Cycle, GroupMember, Payout } from "@/lib/types";
 
@@ -38,8 +40,8 @@ export function BiddingBoard({
   const { t, locale } = useT();
   const router = useRouter();
   const [bids, setBids] = useState(initialBids);
-  const [opensAt, setOpensAt] = useState(toDateTimeLocal(cycle.bid_opens_at) || defaultOpen());
-  const [closesAt, setClosesAt] = useState(toDateTimeLocal(cycle.bid_closes_at) || defaultClose());
+  const [opensAt, setOpensAt] = useState(toIstInput(cycle.bid_opens_at) || defaultIstWindow().open);
+  const [closesAt, setClosesAt] = useState(toIstInput(cycle.bid_closes_at) || defaultIstWindow().close);
   const [discount, setDiscount] = useState("");
   const [seatId, setSeatId] = useState(mySeats[0]?.id ?? "");
   const [pending, setPending] = useState(false);
@@ -111,22 +113,13 @@ export function BiddingBoard({
 
   if (payout) {
     const winner = members.find((member) => member.id === payout.winner_member_id);
-    const discountWon = Number(payout.bid_discount ?? 0);
-    const bonus = Number(payout.bonus_per_member ?? 0);
-    const takes = Number(poolAmount) - discountWon;
     return (
       <div className="space-y-4">
-        <Card className="p-5 text-center">
-          <p className="text-sm font-semibold text-primary">{t("bidLocked")}</p>
-          <p className="mt-2 text-4xl font-bold">{winner ? seatName(winner) : "—"}</p>
-          <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
-            {t("bidDiscount", { amount: formatRupees(discountWon) })}
-          </p>
-          <p className="mt-1 font-semibold">{t("winnerTakes", { amount: formatRupees(takes) })}</p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {t("bonusEach", { amount: formatRupees(bonus) })}
-          </p>
-        </Card>
+        <BidResultCard
+          payout={payout}
+          poolAmount={poolAmount}
+          winnerName={winner ? seatName(winner) : "—"}
+        />
         <BidList bids={bids} members={members} lowestId={lowest?.id} />
       </div>
     );
@@ -137,6 +130,9 @@ export function BiddingBoard({
       {isAdmin ? (
         <Card className="p-5">
           <p className="mb-3 text-sm font-semibold">{t("bidWindow")}</p>
+          <p className="mb-3 text-sm leading-relaxed text-muted-foreground">
+            {t("bidTimesIst")} {t("indianTimeNow", { time: nowIstLabel(locale) })}
+          </p>
           <div className="space-y-3">
             <div className="space-y-1.5">
               <Label htmlFor="bid-open">{t("bidOpens")}</Label>
@@ -159,7 +155,7 @@ export function BiddingBoard({
             {isOpen ? t("openBidding") : windowClosed ? t("windowClosed") : t("bidNotOpen")}
           </p>
           <p className="mt-1 text-sm text-muted-foreground">
-            {formatDateTime(cycle.bid_opens_at, locale)} → {formatDateTime(cycle.bid_closes_at, locale)}
+            {formatIstDateTime(cycle.bid_opens_at, locale)} → {formatIstDateTime(cycle.bid_closes_at, locale)}
           </p>
         </Card>
       ) : (
@@ -262,16 +258,4 @@ function BidList({
       )}
     </Card>
   );
-}
-
-function defaultOpen() {
-  const date = new Date();
-  date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
-  return date.toISOString().slice(0, 16);
-}
-
-function defaultClose() {
-  const date = new Date(Date.now() + 60 * 60 * 1000);
-  date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
-  return date.toISOString().slice(0, 16);
 }

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Check, CircleDashed } from "lucide-react";
+import { BidResultCard } from "@/components/groups/bid-result-card";
 import { PayoutForm } from "@/components/groups/payout-form";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -42,6 +43,9 @@ export function MeetingChecklist({
   upiId,
   meetingLabel,
   meetingDetail,
+  groupType = "lucky_draw",
+  bidPayout = null,
+  poolAmount = 0,
 }: {
   groupId: string;
   groupName: string;
@@ -62,6 +66,9 @@ export function MeetingChecklist({
   upiId?: string | null;
   meetingLabel: string;
   meetingDetail: string;
+  groupType?: "lucky_draw" | "bidding" | "loan";
+  bidPayout?: import("@/lib/types").Payout | null;
+  poolAmount?: number | string;
 }) {
   const { t, locale } = useT();
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -93,6 +100,7 @@ export function MeetingChecklist({
   const collectDone = unpaid.length === 0;
   const drawDone = drawn;
   const handoverDone = drawn && !payoutPending;
+  const isBidding = groupType === "bidding";
 
   return (
     <Card className="mt-5 overflow-hidden p-0">
@@ -181,15 +189,19 @@ export function MeetingChecklist({
           </li>
 
           <li>
-            <ChecklistTitle done={drawDone} title={t("stepDraw")} />
-            {winnerName ? (
+            <ChecklistTitle done={drawDone} title={isBidding ? t("stepLilav") : t("stepDraw")} />
+            {winnerName && isBidding && bidPayout ? (
+              <div className="mt-3">
+                <BidResultCard payout={bidPayout} poolAmount={poolAmount} winnerName={winnerName} />
+              </div>
+            ) : winnerName ? (
               <p className="mt-2 rounded-xl bg-accent/70 px-3 py-2 font-semibold">
                 {t("receivedPool", { name: winnerName })}
               </p>
             ) : (
-              <Button asChild className="mt-3 w-full" disabled={!canDraw}>
+              <Button asChild className="mt-3 w-full" disabled={!canDraw && !isBidding}>
                 <Link href={`/groups/${groupId}/draw`}>
-                  {canDraw ? t("drawChitthi") : t("chitthi")}
+                  {isBidding ? t("openLilav") : canDraw ? t("drawChitthi") : t("chitthi")}
                 </Link>
               </Button>
             )}
@@ -203,7 +215,7 @@ export function MeetingChecklist({
               <p className="mt-2 text-sm font-semibold text-emerald-700">{t("handoverSaved")}</p>
             ) : (
               <p className="mt-2 text-sm text-muted-foreground">
-                {drawDone ? t("markPoolHanded") : t("stepDraw")}
+                {drawDone ? t("markPoolHanded") : isBidding ? t("stepLilav") : t("stepDraw")}
               </p>
             )}
           </li>

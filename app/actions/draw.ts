@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { istInputToIso } from "@/lib/ist";
 import { createClient } from "@/lib/supabase/server";
 
 function refreshDraw(groupId: string) {
@@ -58,8 +59,8 @@ export async function setBidWindowAction(input: {
   const supabase = await createClient();
   const { error } = await supabase.rpc("set_bid_window", {
     p_cycle_id: input.cycleId,
-    p_opens_at: new Date(input.opensAt).toISOString(),
-    p_closes_at: new Date(input.closesAt).toISOString(),
+    p_opens_at: istInputToIso(input.opensAt),
+    p_closes_at: istInputToIso(input.closesAt),
   });
   if (error) return { error: error.message };
   refreshDraw(input.groupId);

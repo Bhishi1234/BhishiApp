@@ -24,7 +24,7 @@ export default async function DrawPage({
 
   const { group, members, cycles, contributions, payouts, bids, isAdmin, profile, mySeats } = bundle;
   const locale = parseLocale(profile?.locale);
-  const meeting = getMeetingState(cycles, payouts, group.frequency);
+  const meeting = getMeetingState(cycles, payouts, group.frequency, group.type);
   const current = meeting.cycle;
   const wonIds = new Set(payouts.map((row) => row.winner_member_id));
   const eligible = members.filter((member) => !wonIds.has(member.id));

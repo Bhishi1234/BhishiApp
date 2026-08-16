@@ -7,6 +7,7 @@ import type {
   Group,
   GroupMember,
   GroupSettings,
+  HandRequest,
   Payout,
   PhoneInvite,
   Profile,
@@ -80,7 +81,7 @@ export async function getGroupBundle(groupId: string) {
   const isAdmin = mySeats.some((seat) => seat.role === "admin" || seat.role === "co_admin");
   const isOwner = mySeats.some((seat) => seat.role === "admin");
 
-  const [{ data: contributions }, { data: payouts }, { data: bids }] = await Promise.all([
+  const [{ data: contributions }, { data: payouts }, { data: bids }, { data: handRequests }] = await Promise.all([
     cycleIds.length
       ? supabase.from("contributions").select("*").in("cycle_id", cycleIds)
       : Promise.resolve({ data: [] }),
@@ -90,6 +91,11 @@ export async function getGroupBundle(groupId: string) {
     cycleIds.length
       ? supabase.from("bids").select("*").in("cycle_id", cycleIds).order("discount_amount")
       : Promise.resolve({ data: [] }),
+    supabase
+      .from("hand_requests")
+      .select("*")
+      .eq("group_id", groupId)
+      .order("created_at", { ascending: false }),
   ]);
 
   const { data: organiser } = await supabase
@@ -108,6 +114,7 @@ export async function getGroupBundle(groupId: string) {
     contributions: (contributions ?? []) as Contribution[],
     payouts: (payouts ?? []) as Payout[],
     bids: (bids ?? []) as Bid[],
+    handRequests: (handRequests ?? []) as HandRequest[],
     settings: (settings ?? null) as GroupSettings | null,
     mySeats,
     membership,
