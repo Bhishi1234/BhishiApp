@@ -9,16 +9,19 @@ import { Card } from "@/components/ui/card";
 import { useT } from "@/components/i18n/locale-provider";
 import { formatDate, formatRupees } from "@/lib/format";
 import { reminderMessage, whatsappShareUrl } from "@/lib/whatsapp";
-import { updateContributionAction } from "@/app/actions/contributions";
+import { updateContributionsAction } from "@/app/actions/contributions";
 import { toast } from "sonner";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 export type MeetingUnpaid = {
-  memberId: string;
-  contributionId: string;
+  key: string;
   name: string;
   phone: string | null;
+  contributionIds: string[];
+  handCount: number;
+  unpaidHands: number;
+  amountDue: number;
   claimed: boolean;
   lateDays: number;
 };
@@ -46,6 +49,7 @@ export function MeetingChecklist({
   groupType = "lucky_draw",
   bidPayout = null,
   poolAmount = 0,
+  canRemind = false,
 }: {
   groupId: string;
   groupName: string;
@@ -69,6 +73,7 @@ export function MeetingChecklist({
   groupType?: "lucky_draw" | "bidding" | "loan";
   bidPayout?: import("@/lib/types").Payout | null;
   poolAmount?: number | string;
+  canRemind?: boolean;
 }) {
   const { t, locale } = useT();
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -77,7 +82,7 @@ export function MeetingChecklist({
     const message = reminderMessage({
       memberName: member.name,
       groupName,
-      amount: formatRupees(amount),
+      amount: formatRupees(member.amountDue),
       dueDate: formatDate(dueDate, locale),
       upiId,
     });
@@ -85,9 +90,9 @@ export function MeetingChecklist({
   }
 
   async function markPaid(row: MeetingUnpaid) {
-    setBusyId(row.contributionId);
-    const result = await updateContributionAction({
-      contributionId: row.contributionId,
+    setBusyId(row.key);
+    const result = await updateContributionsAction({
+      contributionIds: row.contributionIds,
       groupId,
       status: "paid",
       paymentMode: "upi",
@@ -143,12 +148,22 @@ export function MeetingChecklist({
               <div className="mt-3 space-y-2">
                 {unpaid.map((row) => (
                   <div
-                    key={row.memberId}
+                    key={row.key}
                     className="flex flex-col gap-2 rounded-2xl bg-secondary/70 px-3 py-3 sm:flex-row sm:items-center sm:justify-between"
                   >
                     <div>
                       <p className="font-semibold">{row.name}</p>
+                      {row.handCount > 1 ? (
+                        <p className="text-xs font-semibold text-primary">
+                          {t("playingHands", { n: row.handCount })}
+                        </p>
+                      ) : null}
                       <p className="text-xs font-semibold text-muted-foreground">
+                        {t("dueForHands", {
+                          amount: formatRupees(row.amountDue),
+                          n: row.unpaidHands,
+                        })}
+                        {" · "}
                         {row.claimed
                           ? t("claimed")
                           : row.lateDays > 0
@@ -158,23 +173,26 @@ export function MeetingChecklist({
                             : t("due")}
                       </p>
                     </div>
+                    {(canRemind || isAdmin) ? (
                     <div className="flex gap-2">
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        onClick={() => remind(row)}
-                      >
-                        {t("remindWhatsApp")}
-                      </Button>
+                      {canRemind ? (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => remind(row)}
+                        >
+                          {t("remindWhatsApp")}
+                        </Button>
+                      ) : null}
                       {isAdmin ? (
                         <Button
                           type="button"
                           size="sm"
-                          disabled={busyId === row.contributionId}
+                          disabled={busyId === row.key}
                           onClick={() => markPaid(row)}
                         >
-                          {busyId === row.contributionId
+                          {busyId === row.key
                             ? t("saving")
                             : row.claimed
                               ? t("claimedConfirm")
@@ -182,6 +200,7 @@ export function MeetingChecklist({
                         </Button>
                       ) : null}
                     </div>
+                    ) : null}
                   </div>
                 ))}
               </div>

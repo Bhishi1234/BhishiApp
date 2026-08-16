@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Check, Clock, Pencil } from "lucide-react";
 import { toast } from "sonner";
-import { claimHaptaAction, updateContributionAction } from "@/app/actions/contributions";
+import { claimHaptaAction, claimHaptaManyAction, updateContributionAction, updateContributionsAction } from "@/app/actions/contributions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useT } from "@/components/i18n/locale-provider";
@@ -21,6 +21,7 @@ export function ContributionCell({
   cycleNumber,
   dueDate,
   highlight = false,
+  extraIds = [],
 }: {
   contribution: Contribution;
   groupId: string;
@@ -30,6 +31,7 @@ export function ContributionCell({
   cycleNumber: number;
   dueDate: string;
   highlight?: boolean;
+  extraIds?: string[];
 }) {
   const { t, locale } = useT();
   const [open, setOpen] = useState(false);
@@ -51,15 +53,25 @@ export function ContributionCell({
     { id: "bank_transfer", label: t("bank") },
   ];
 
+  const ids = extraIds.length > 0 ? extraIds : [contribution.id];
+
   async function save(status: ContributionStatus) {
     setPending(true);
-    const result = await updateContributionAction({
-      contributionId: contribution.id,
-      groupId,
-      status,
-      amountPaid: status === "partial" ? Number(partial) : undefined,
-      paymentMode: status === "unpaid" ? undefined : mode,
-    });
+    const result =
+      ids.length === 1
+        ? await updateContributionAction({
+            contributionId: ids[0],
+            groupId,
+            status,
+            amountPaid: status === "partial" ? Number(partial) : undefined,
+            paymentMode: status === "unpaid" ? undefined : mode,
+          })
+        : await updateContributionsAction({
+            contributionIds: ids,
+            groupId,
+            status,
+            paymentMode: status === "unpaid" ? undefined : mode,
+          });
     setPending(false);
     if (result.error) {
       toast.error(result.error);
@@ -77,11 +89,10 @@ export function ContributionCell({
 
   async function claim() {
     setPending(true);
-    const result = await claimHaptaAction({
-      contributionId: contribution.id,
-      groupId,
-      paymentMode: mode,
-    });
+    const result =
+      ids.length === 1
+        ? await claimHaptaAction({ contributionId: ids[0], groupId, paymentMode: mode })
+        : await claimHaptaManyAction({ contributionIds: ids, groupId, paymentMode: mode });
     setPending(false);
     if (result.error) toast.error(result.error);
     else {
@@ -160,11 +171,19 @@ export function ContributionCell({
               {t("monthN", { n: cycleNumber })} · {formatDayMonth(dueDate, locale)}
             </p>
             <h3 className="mt-1 text-xl font-bold">{memberName}</h3>
+            {ids.length > 1 ? (
+              <p className="mt-1 text-sm font-semibold text-primary">{t("playingHands", { n: ids.length })}</p>
+            ) : null}
             <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-              {t("haptaDueLine", {
-                amount: formatRupees(contribution.amount_due),
-                date: formatDayMonth(dueDate, locale),
-              })}{" "}
+              {ids.length > 1
+                ? t("dueForHands", {
+                    amount: formatRupees(contribution.amount_due),
+                    n: ids.length,
+                  })
+                : t("haptaDueLine", {
+                    amount: formatRupees(contribution.amount_due),
+                    date: formatDayMonth(dueDate, locale),
+                  })}{" "}
               {t("haptaOutside")}
             </p>
 
@@ -191,17 +210,19 @@ export function ContributionCell({
 
             {canEdit ? (
               <>
-                <div className="mt-4 space-y-2">
-                  <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                    {t("partialAmount")}
-                  </p>
-                  <Input
-                    inputMode="numeric"
-                    value={partial}
-                    onChange={(event) => setPartial(event.target.value)}
-                    placeholder={String(contribution.amount_due)}
-                  />
-                </div>
+                {ids.length === 1 ? (
+                  <div className="mt-4 space-y-2">
+                    <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                      {t("partialAmount")}
+                    </p>
+                    <Input
+                      inputMode="numeric"
+                      value={partial}
+                      onChange={(event) => setPartial(event.target.value)}
+                      placeholder={String(contribution.amount_due)}
+                    />
+                  </div>
+                ) : null}
                 <div className="mt-5 space-y-2">
                   <Button className="w-full" size="lg" disabled={pending} onClick={() => save("paid")}>
                     {pending
@@ -210,14 +231,16 @@ export function ContributionCell({
                         ? t("confirmReceived")
                         : t("markPaid", { amount: formatRupees(contribution.amount_due) })}
                   </Button>
-                  <Button
-                    variant="accent"
-                    className="w-full"
-                    disabled={pending}
-                    onClick={() => save("partial")}
-                  >
-                    {t("savePartial")}
-                  </Button>
+                  {ids.length === 1 ? (
+                    <Button
+                      variant="accent"
+                      className="w-full"
+                      disabled={pending}
+                      onClick={() => save("partial")}
+                    >
+                      {t("savePartial")}
+                    </Button>
+                  ) : null}
                   <Button variant="outline" className="w-full" disabled={pending} onClick={() => save("unpaid")}>
                     {t("keepDue")}
                   </Button>

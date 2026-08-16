@@ -123,23 +123,27 @@ export default async function GroupsPage() {
     const cycle = meeting.cycle;
     if (!cycle) return [];
     const organiser = organiserMap[group.created_by];
-    return mine.flatMap((seat) => {
-      const contribution = myContributions.find(
-        (row) => row.member_id === seat.id && row.cycle_id === cycle.id,
-      );
-      if (!contribution) return [];
-      return [
-        {
-          group,
-          cycle,
-          contribution,
-          seatLabel: (seat.hand_number ?? 1) > 1 ? ` · hand ${seat.hand_number}` : "",
-          organiserName: organiser?.full_name?.trim() || "Organiser",
-          organiserUpi: organiser?.upi_id ?? null,
-          selfServe: settingsMap[group.id] !== false,
-        },
-      ];
-    });
+    const cycleContributions = mine
+      .map((seat) => myContributions.find((row) => row.member_id === seat.id && row.cycle_id === cycle.id))
+      .filter((row): row is Contribution => Boolean(row));
+    if (cycleContributions.length === 0) return [];
+    const remaining = cycleContributions.filter((row) => row.status !== "paid");
+    const amountDue = remaining.reduce(
+      (sum, row) => sum + Math.max(Number(row.amount_due) - Number(row.amount_paid), 0),
+      0,
+    );
+    return [
+      {
+        group,
+        cycle,
+        contributions: cycleContributions,
+        handCount: mine.length,
+        amount: remaining.length === 0 ? 0 : amountDue || Number(group.contribution_amount) * remaining.length,
+        organiserName: organiser?.full_name?.trim() || "Organiser",
+        organiserUpi: organiser?.upi_id ?? null,
+        selfServe: settingsMap[group.id] !== false,
+      },
+    ];
   });
 
   return (
@@ -179,13 +183,14 @@ export default async function GroupsPage() {
           </h2>
           {haptaCards.map((row) => (
             <HaptaPayCard
-              key={row.contribution.id}
-              contribution={row.contribution}
+              key={`${row.group.id}-${row.cycle.id}`}
+              contributions={row.contributions}
               groupId={row.group.id}
-              groupName={`${row.group.name}${row.seatLabel}`}
+              groupName={row.group.name}
               cycleNumber={row.cycle.cycle_number}
               dueDate={row.cycle.due_date}
-              amount={row.group.contribution_amount}
+              amount={row.amount}
+              handCount={row.handCount}
               organiserName={row.organiserName}
               organiserUpi={row.organiserUpi}
               selfServe={row.selfServe}

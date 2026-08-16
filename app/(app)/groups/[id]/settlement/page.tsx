@@ -57,7 +57,9 @@ export default async function SettlementPage({
             <Card key={seats[0].id} className="p-5">
               <p className="text-lg font-semibold">{seats[0].display_name}</p>
               {seats.length > 1 ? (
-                <p className="mt-1 text-sm text-muted-foreground">{t(locale, "personTotal")}</p>
+                <p className="mt-1 text-sm font-semibold text-primary">
+                  {t(locale, "playingHands", { n: seats.length })}
+                </p>
               ) : null}
               {seats.length > 1 ? (
                 <div className="mt-3 grid grid-cols-2 gap-2 text-sm">

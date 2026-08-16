@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { claimHaptaAction } from "@/app/actions/contributions";
+import { claimHaptaAction, claimHaptaManyAction } from "@/app/actions/contributions";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useT } from "@/components/i18n/locale-provider";
@@ -19,32 +19,35 @@ const modes: { id: PaymentMode; key: "payUpi" | "cash" | "bank" }[] = [
 ];
 
 export function HaptaPayCard({
-  contribution,
+  contributions,
   groupId,
   groupName,
   cycleNumber,
   dueDate,
   amount,
+  handCount = 1,
   organiserName,
   organiserUpi,
   selfServe,
 }: {
-  contribution: Contribution;
+  contributions: Contribution[];
   groupId: string;
   groupName: string;
   cycleNumber: number;
   dueDate: string;
   amount: number | string;
+  handCount?: number;
   organiserName: string;
   organiserUpi: string | null;
   selfServe: boolean;
 }) {
   const { t, locale } = useT();
-  const [mode, setMode] = useState<PaymentMode>(contribution.payment_mode ?? "upi");
+  const [mode, setMode] = useState<PaymentMode>(contributions[0]?.payment_mode ?? "upi");
   const [pending, setPending] = useState(false);
 
-  const paid = contribution.status === "paid";
-  const claimed = Boolean(contribution.member_claimed_at) && !paid;
+  const remaining = contributions.filter((row) => row.status !== "paid");
+  const paid = remaining.length === 0;
+  const claimed = remaining.length > 0 && remaining.every((row) => Boolean(row.member_claimed_at));
   const upiUrl = buildUpiPayUrl({
     pa: organiserUpi,
     pn: organiserName,
@@ -54,11 +57,11 @@ export function HaptaPayCard({
 
   async function claim() {
     setPending(true);
-    const result = await claimHaptaAction({
-      contributionId: contribution.id,
-      groupId,
-      paymentMode: mode,
-    });
+    const ids = remaining.map((row) => row.id);
+    const result =
+      ids.length === 1
+        ? await claimHaptaAction({ contributionId: ids[0], groupId, paymentMode: mode })
+        : await claimHaptaManyAction({ contributionIds: ids, groupId, paymentMode: mode });
     setPending(false);
     if (result.error) toast.error(result.error);
     else toast.success(t("claimedToast"));
@@ -75,12 +78,24 @@ export function HaptaPayCard({
       <div className="panel-hero px-5 py-4">
         <p className="text-sm font-semibold text-primary">{t("yourHapta")}</p>
         <h2 className="mt-1 text-xl font-bold">{groupName}</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {t("haptaDueLine", {
-            amount: formatRupees(amount),
-            date: formatDate(dueDate, locale),
-          })}
-        </p>
+        {handCount > 1 ? (
+          <p className="mt-1 text-sm font-semibold text-primary">{t("playingHands", { n: handCount })}</p>
+        ) : null}
+        {paid ? (
+          <p className="mt-1 text-sm text-muted-foreground">{formatDate(dueDate, locale)}</p>
+        ) : (
+          <p className="mt-1 text-sm text-muted-foreground">
+            {handCount > 1
+              ? `${t("dueForHands", {
+                  amount: formatRupees(amount),
+                  n: remaining.length || handCount,
+                })} · ${formatDate(dueDate, locale)}`
+              : t("haptaDueLine", {
+                  amount: formatRupees(amount),
+                  date: formatDate(dueDate, locale),
+                })}
+          </p>
+        )}
       </div>
       <div className="space-y-3 p-5">
         {organiserUpi ? (

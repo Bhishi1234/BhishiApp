@@ -10,9 +10,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { PageHeader } from "@/components/layout/page-header";
-import { formatPhone, seatName } from "@/lib/format";
+import { formatPhone } from "@/lib/format";
 import { getGroupBundle } from "@/lib/group-data";
 import { parseLocale, t } from "@/lib/i18n";
+import { groupByPerson } from "@/lib/people";
 import Link from "next/link";
 
 export default async function MembersPage({
@@ -103,30 +104,39 @@ export default async function MembersPage({
       ) : null}
 
       <div className="mt-5 space-y-3">
-        {bundle.members.map((member) => {
-          const isWinner = wonIds.has(member.id);
-          const isSelf = member.user_id === bundle.user.id;
-          const isOrganiserSeat = member.role === "admin";
-          const isCoAdmin = member.role === "co_admin";
-          const joined = Boolean(member.user_id);
+        {groupByPerson(bundle.members).map((person) => {
+          const member = person.primary;
+          const wonCount = person.seats.filter((seat) => wonIds.has(seat.id)).length;
+          const isSelf = person.user_id === bundle.user.id;
+          const isOrganiserSeat = person.seats.some((seat) => seat.role === "admin");
+          const coAdminSeat = person.seats.find((seat) => seat.role === "co_admin");
+          const isCoAdmin = Boolean(coAdminSeat);
+          const joined = Boolean(person.user_id);
+          const leaveSeat = person.seats.find((seat) => seat.role !== "admin" && !wonIds.has(seat.id));
 
           return (
-            <Card key={member.id} className="p-4">
+            <Card key={person.key} className="p-4">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="font-semibold">{seatName(member)}</p>
-                  <p className="text-sm text-muted-foreground">{formatPhone(member.phone)}</p>
+                  <p className="font-semibold">{person.display_name}</p>
+                  <p className="text-sm text-muted-foreground">{formatPhone(person.phone)}</p>
+                  {person.handCount > 1 ? (
+                    <p className="mt-1 text-xs font-semibold text-primary">
+                      {t(locale, "playingHands", { n: person.handCount })}
+                    </p>
+                  ) : null}
                 </div>
                 <div className="flex flex-col items-end gap-1">
-                  {(member.hand_number ?? 1) > 1 ? (
-                    <Badge>{t(locale, "handBadge", { n: member.hand_number })}</Badge>
-                  ) : null}
-                  {isWinner ? (
+                  {wonCount === 0 ? (
+                    <Badge>{t(locale, "stillEligible")}</Badge>
+                  ) : wonCount === person.handCount ? (
                     <Badge className="bg-accent text-accent-foreground">
                       {t(locale, "receivedPoolBadge")}
                     </Badge>
                   ) : (
-                    <Badge>{t(locale, "stillEligible")}</Badge>
+                    <Badge className="bg-accent text-accent-foreground">
+                      {t(locale, "handsWon", { won: wonCount, n: person.handCount })}
+                    </Badge>
                   )}
                   {isCoAdmin ? (
                     <Badge className="bg-primary text-white">{t(locale, "coAdminBadge")}</Badge>
@@ -140,14 +150,14 @@ export default async function MembersPage({
               {isSelf && isOrganiserSeat ? (
                 <p className="mt-3 text-sm text-muted-foreground">{t(locale, "organiserCannotLeave")}</p>
               ) : null}
-              {isSelf && isWinner ? (
+              {isSelf && !leaveSeat && !isOrganiserSeat ? (
                 <p className="mt-3 text-sm text-muted-foreground">{t(locale, "leaveBlockedWinner")}</p>
               ) : null}
-              {isSelf && !isOrganiserSeat && !isWinner ? (
-                <LeaveGroupButton groupId={id} groupName={bundle.group.name} memberId={member.id} />
+              {isSelf && leaveSeat && !isOrganiserSeat ? (
+                <LeaveGroupButton groupId={id} groupName={bundle.group.name} memberId={leaveSeat.id} />
               ) : null}
-              {bundle.isOwner && !isOrganiserSeat && isCoAdmin ? (
-                <CoAdminButton memberId={member.id} groupId={id} enabled />
+              {bundle.isOwner && !isOrganiserSeat && isCoAdmin && coAdminSeat ? (
+                <CoAdminButton memberId={coAdminSeat.id} groupId={id} enabled />
               ) : null}
               {bundle.isOwner && !isOrganiserSeat && !isCoAdmin && joined ? (
                 <CoAdminButton memberId={member.id} groupId={id} enabled={false} />
@@ -157,16 +167,16 @@ export default async function MembersPage({
               ) : null}
               {!joined && bundle.isAdmin ? (
                 <NudgeJoinButton
-                  name={member.display_name}
-                  phone={member.phone}
+                  name={person.display_name}
+                  phone={person.phone}
                   groupName={bundle.group.name}
                 />
               ) : null}
               {bundle.isAdmin && canAddHand ? <AddHandButton memberId={member.id} groupId={id} /> : null}
-              {bundle.isAdmin && !isOrganiserSeat && !isCoAdmin && !isWinner && !isSelf ? (
+              {bundle.isAdmin && person.handCount === 1 && !isOrganiserSeat && !isCoAdmin && wonCount === 0 && !isSelf ? (
                 <ReplaceMemberForm memberId={member.id} groupId={id} />
               ) : null}
-              {bundle.isAdmin && isWinner && !isOrganiserSeat ? (
+              {bundle.isAdmin && wonCount === person.handCount && !isOrganiserSeat ? (
                 <p className="mt-3 text-sm text-muted-foreground">{t(locale, "leaveBlockedWinner")}</p>
               ) : null}
             </Card>

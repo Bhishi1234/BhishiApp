@@ -15,6 +15,7 @@ import { daysLate } from "@/lib/dates";
 import { formatDate, formatRupees, groupTypeHindi, groupTypeLabel, seatName } from "@/lib/format";
 import { getGroupBundle } from "@/lib/group-data";
 import { parseLocale, t } from "@/lib/i18n";
+import { groupByPerson } from "@/lib/people";
 
 export default async function GroupDetailPage({
   params,
@@ -25,27 +26,38 @@ export default async function GroupDetailPage({
   const bundle = await getGroupBundle(id);
   if (!bundle) notFound();
 
-  const { group, members, cycles, contributions, payouts, isAdmin, organiser, profile } = bundle;
+  const { group, members, cycles, contributions, payouts, isAdmin, isOwner, organiser, profile } = bundle;
   const locale = parseLocale(profile?.locale);
   const meeting = getMeetingState(cycles, payouts, group.frequency, group.type);
   const current = meeting.cycle;
   const currentContributions = contributions.filter((row) => row.cycle_id === current?.id);
   const paidCount = currentContributions.filter((row) => row.status === "paid").length;
   const collected = currentContributions.reduce((sum, row) => sum + Number(row.amount_paid), 0);
-  const unpaidMembers = members.filter((member) =>
-    currentContributions.some((row) => row.member_id === member.id && row.status !== "paid"),
-  );
-  const unpaid = unpaidMembers.map((member) => {
-    const row = currentContributions.find((item) => item.member_id === member.id);
-    return {
-      memberId: member.id,
-      contributionId: row?.id ?? "",
-      name: seatName(member),
-      phone: member.phone,
-      claimed: Boolean(row?.member_claimed_at),
-      lateDays: daysLate(current?.due_date ?? group.start_date),
-    };
-  }).filter((row) => row.contributionId);
+  const people = groupByPerson(members);
+  const unpaid = people.flatMap((person) => {
+    const rows = currentContributions.filter(
+      (row) => person.seats.some((seat) => seat.id === row.member_id) && row.status !== "paid",
+    );
+    if (rows.length === 0) return [];
+    const amountDue = rows.reduce(
+      (sum, row) => sum + Math.max(Number(row.amount_due) - Number(row.amount_paid), 0),
+      0,
+    );
+    return [
+      {
+        key: person.key,
+        name: person.display_name,
+        phone: person.phone,
+        contributionIds: rows.map((row) => row.id),
+        handCount: person.handCount,
+        unpaidHands: rows.length,
+        amountDue,
+        claimed: rows.every((row) => Boolean(row.member_claimed_at)),
+        lateDays: daysLate(current?.due_date ?? group.start_date),
+      },
+    ];
+  });
+  const unpaidMembers = unpaid.map((row) => ({ name: row.name, phone: row.phone }));
   const currentPayout = payouts.find((row) => row.cycle_id === current?.id);
   const winner = members.find((member) => member.id === currentPayout?.winner_member_id);
   const canStartRound = members.length >= 2;
@@ -98,7 +110,7 @@ export default async function GroupDetailPage({
         </Card>
       ) : null}
 
-      <div className="mt-4 grid grid-cols-3 gap-2">
+      <div className={`mt-4 grid gap-2 ${isOwner ? "grid-cols-3" : "grid-cols-1"}`}>
         <Link
           href={`/groups/${id}/members`}
           className="flex min-h-[4.5rem] flex-col items-center justify-center gap-1.5 rounded-2xl bg-secondary/80 px-2 text-sm font-semibold"
@@ -106,19 +118,23 @@ export default async function GroupDetailPage({
           <UserPlus className="size-5" />
           {t(locale, "members")}
         </Link>
-        <ReminderButton
-          unpaid={unpaidMembers.map((member) => ({ name: member.display_name, phone: member.phone }))}
-          groupName={group.name}
-          amount={group.contribution_amount}
-          dueDate={current?.due_date ?? group.start_date}
-          upiId={organiserUpi}
-        />
-        <InviteButton
-          groupId={group.id}
-          groupName={group.name}
-          amount={group.contribution_amount}
-          type={group.type}
-        />
+        {isOwner ? (
+          <>
+            <ReminderButton
+              unpaid={unpaidMembers}
+              groupName={group.name}
+              amount={group.contribution_amount}
+              dueDate={current?.due_date ?? group.start_date}
+              upiId={organiserUpi}
+            />
+            <InviteButton
+              groupId={group.id}
+              groupName={group.name}
+              amount={group.contribution_amount}
+              type={group.type}
+            />
+          </>
+        ) : null}
       </div>
 
       {!canStartRound ? (
@@ -155,6 +171,7 @@ export default async function GroupDetailPage({
           groupType={group.type}
           bidPayout={group.type === "bidding" ? currentPayout ?? null : null}
           poolAmount={current?.pool_amount ?? 0}
+          canRemind={isOwner}
         />
       )}
 
@@ -191,7 +208,10 @@ export default async function GroupDetailPage({
             poolAmount={current?.pool_amount ?? 0}
             haptaAmount={group.contribution_amount}
             paid={paidNames}
-            due={unpaid.map((row) => ({ name: row.name, lateDays: row.lateDays }))}
+            due={unpaid.map((row) => ({
+              name: row.handCount > 1 ? `${row.name} (${row.handCount})` : row.name,
+              lateDays: row.lateDays,
+            }))}
             eligible={eligibleNames}
             alreadyWon={alreadyWonNames}
             winnerName={winner ? seatName(winner) : null}
