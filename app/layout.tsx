@@ -1,23 +1,24 @@
 import type { Metadata, Viewport } from "next";
-import { Noto_Sans, Noto_Sans_Devanagari } from "next/font/google";
+import { Noto_Sans_Devanagari, Poppins } from "next/font/google";
 import { Providers } from "@/components/providers";
 import "./globals.css";
 
-const notoSans = Noto_Sans({
-  variable: "--font-noto",
+const poppins = Poppins({
+  variable: "--font-poppins",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "500", "600", "700", "800"],
 });
 
 const notoDevanagari = Noto_Sans_Devanagari({
+  variable: "--font-deva",
   subsets: ["devanagari"],
-  weight: ["400", "600", "700"],
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
   title: "Bhishi — Group savings register",
   description:
-    "A record-keeping app for Bhishi, Kameti, and Committee groups. Track contributions, run lucky draws, and send reminders. Money stays between members.",
+    "A record-keeping app for Bhishi, Kameti, and Committee groups across India. Track hapta, run lucky draws or lilav, and keep every hand on one register. Money stays between members.",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
@@ -41,7 +42,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${notoSans.variable} ${notoDevanagari.className} min-h-dvh bg-background text-foreground antialiased`}
+        className={`${poppins.variable} ${notoDevanagari.variable} min-h-dvh bg-background font-sans text-foreground antialiased`}
       >
         <Providers>{children}</Providers>
       </body>

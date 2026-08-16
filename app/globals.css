@@ -45,7 +45,7 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 6px);
-  --font-sans: var(--font-noto);
+  --font-sans: var(--font-poppins), var(--font-deva), ui-sans-serif, system-ui, sans-serif;
 }
 
 * {
@@ -59,7 +59,8 @@ body {
 }
 
 body {
-  font-family: var(--font-noto), "Noto Sans Devanagari", sans-serif;
+  font-family: var(--font-poppins), var(--font-deva), ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: -0.011em;
   background-image:
     linear-gradient(180deg, #ffffff 0%, #f4f8ff 38%, #e8f1ff 100%),
     radial-gradient(900px 420px at 0% -10%, rgba(147, 197, 253, 0.45) 0%, transparent 58%),

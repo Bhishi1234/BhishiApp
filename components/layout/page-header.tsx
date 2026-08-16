@@ -30,13 +30,13 @@ export function PageHeader({
       <div className="flex items-start justify-between gap-3">
         <div>
           {kicker ? (
-            <p className="text-sm font-semibold tracking-wide text-primary uppercase">
+            <p className="text-xs font-semibold tracking-[0.16em] text-primary uppercase">
               {kicker}
             </p>
           ) : null}
-          <h1 className="text-[1.85rem] leading-tight font-bold tracking-tight">{title}</h1>
+          <h1 className="text-[1.9rem] leading-[1.15] font-bold tracking-tight">{title}</h1>
           {subtitle ? (
-            <p className="mt-1.5 text-[15px] leading-relaxed text-muted-foreground">{subtitle}</p>
+            <p className="mt-2 text-base leading-relaxed text-muted-foreground">{subtitle}</p>
           ) : null}
         </div>
         {action}

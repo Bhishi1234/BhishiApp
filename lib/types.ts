@@ -32,6 +32,8 @@ export type Group = {
   created_at: string;
 };
 
+export type PayoutAcceptance = "pending_accept" | "accepted" | "transfer_requested" | "transferred";
+
 export type GroupMember = {
   id: string;
   group_id: string;
@@ -41,6 +43,7 @@ export type GroupMember = {
   role: MemberRole;
   status: MemberStatus;
   joined_at: string;
+  hand_number: number;
 };
 
 export type Cycle = {
@@ -51,6 +54,8 @@ export type Cycle = {
   pool_amount: number | string;
   status: CycleStatus;
   postpone_note?: string | null;
+  bid_opens_at?: string | null;
+  bid_closes_at?: string | null;
 };
 
 export type Contribution = {
@@ -71,6 +76,7 @@ export type Payout = {
   id: string;
   cycle_id: string;
   winner_member_id: string;
+  drawn_member_id?: string | null;
   method: "draw" | "bid";
   bid_discount: number | string | null;
   bonus_per_member: number | string | null;
@@ -81,6 +87,16 @@ export type Payout = {
   eligible_member_ids: string[];
   drawn_at: string;
   drawn_by: string | null;
+  acceptance_status?: PayoutAcceptance;
+  transfer_to_member_id?: string | null;
+};
+
+export type Bid = {
+  id: string;
+  cycle_id: string;
+  member_id: string;
+  discount_amount: number | string;
+  created_at: string;
 };
 
 export type ActivityEvent = {

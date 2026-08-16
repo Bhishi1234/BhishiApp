@@ -44,7 +44,7 @@ export default async function GroupsPage() {
       groupIds.length
         ? supabase
             .from("group_members")
-            .select("id, group_id, user_id, role, display_name")
+            .select("id, group_id, user_id, role, display_name, hand_number")
             .in("group_id", groupIds)
             .eq("status", "active")
         : Promise.resolve({ data: [] }),
@@ -68,7 +68,7 @@ export default async function GroupsPage() {
 
   const members = (memberRows ?? []) as Pick<
     GroupMember,
-    "id" | "group_id" | "user_id" | "role" | "display_name"
+    "id" | "group_id" | "user_id" | "role" | "display_name" | "hand_number"
   >[];
   const myMemberIds = members.filter((row) => row.user_id === user?.id).map((row) => row.id);
   const { data: myContributionRows } = myMemberIds.length
@@ -109,8 +109,8 @@ export default async function GroupsPage() {
   const nextDraw = upcoming[0];
 
   const haptaCards = groupRows.flatMap((group) => {
-    const mine = members.find((row) => row.group_id === group.id && row.user_id === user?.id);
-    if (!mine) return [];
+    const mine = members.filter((row) => row.group_id === group.id && row.user_id === user?.id);
+    if (mine.length === 0) return [];
     const meeting = getMeetingState(
       cycles.filter((cycle) => cycle.group_id === group.id),
       payouts.filter((payout) =>
@@ -120,21 +120,24 @@ export default async function GroupsPage() {
     );
     const cycle = meeting.cycle;
     if (!cycle) return [];
-    const contribution = myContributions.find(
-      (row) => row.member_id === mine.id && row.cycle_id === cycle.id,
-    );
-    if (!contribution) return [];
     const organiser = organiserMap[group.created_by];
-    return [
-      {
-        group,
-        cycle,
-        contribution,
-        organiserName: organiser?.full_name?.trim() || "Organiser",
-        organiserUpi: organiser?.upi_id ?? null,
-        selfServe: settingsMap[group.id] !== false,
-      },
-    ];
+    return mine.flatMap((seat) => {
+      const contribution = myContributions.find(
+        (row) => row.member_id === seat.id && row.cycle_id === cycle.id,
+      );
+      if (!contribution) return [];
+      return [
+        {
+          group,
+          cycle,
+          contribution,
+          seatLabel: (seat.hand_number ?? 1) > 1 ? ` · hand ${seat.hand_number}` : "",
+          organiserName: organiser?.full_name?.trim() || "Organiser",
+          organiserUpi: organiser?.upi_id ?? null,
+          selfServe: settingsMap[group.id] !== false,
+        },
+      ];
+    });
   });
 
   return (
@@ -175,7 +178,7 @@ export default async function GroupsPage() {
               key={row.contribution.id}
               contribution={row.contribution}
               groupId={row.group.id}
-              groupName={row.group.name}
+              groupName={`${row.group.name}${row.seatLabel}`}
               cycleNumber={row.cycle.cycle_number}
               dueDate={row.cycle.due_date}
               amount={row.group.contribution_amount}

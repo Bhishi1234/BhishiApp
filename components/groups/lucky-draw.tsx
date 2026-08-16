@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useT } from "@/components/i18n/locale-provider";
 import { createClient } from "@/lib/supabase/client";
+import { seatName } from "@/lib/format";
 import type { GroupMember } from "@/lib/types";
 
 export function LuckyDraw({
@@ -34,7 +35,7 @@ export function LuckyDraw({
   const [displayName, setDisplayName] = useState(eligible[0]?.display_name ?? "—");
   const [winner, setWinner] = useState<string | null>(null);
 
-  const names = useMemo(() => eligible.map((member) => member.display_name), [eligible]);
+  const names = useMemo(() => eligible.map((member) => seatName(member)), [eligible]);
   const unpaidLabel = unpaidNames.join(", ");
 
   useEffect(() => {
@@ -53,7 +54,9 @@ export function LuckyDraw({
         (payload) => {
           const winnerId = (payload.new as { winner_member_id?: string }).winner_member_id;
           const name =
-            eligible.find((member) => member.id === winnerId)?.display_name ?? names[0] ?? "—";
+            eligible.find((member) => member.id === winnerId)
+              ? seatName(eligible.find((member) => member.id === winnerId)!)
+              : names[0] ?? "—";
           setSpinning(true);
           const interval = window.setInterval(() => {
             const next = names[Math.floor(Math.random() * names.length)];

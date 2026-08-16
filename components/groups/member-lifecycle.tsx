@@ -11,9 +11,11 @@ import { useT } from "@/components/i18n/locale-provider";
 export function LeaveGroupButton({
   groupId,
   groupName,
+  memberId,
 }: {
   groupId: string;
   groupName: string;
+  memberId?: string;
 }) {
   const { t } = useT();
   const [open, setOpen] = useState(false);
@@ -21,13 +23,14 @@ export function LeaveGroupButton({
 
   async function leave() {
     setPending(true);
-    const result = await leaveGroupAction(groupId);
+    const result = await leaveGroupAction(groupId, memberId);
     setPending(false);
     if (result?.error) {
       toast.error(result.error);
       return;
     }
     toast.success(t("leftToast"));
+    setOpen(false);
   }
 
   return (

@@ -37,16 +37,42 @@ export async function claimPhoneInviteAction(memberId: string) {
   redirect(`/groups/${data}`);
 }
 
-export async function leaveGroupAction(groupId: string) {
+export async function addMemberHandAction(memberId: string, groupId: string) {
   const supabase = await createClient();
-  const { error } = await supabase.rpc("leave_group", {
-    p_group_id: groupId,
+  const { error } = await supabase.rpc("add_member_hand", {
+    p_member_id: memberId,
   });
+  if (error) return { error: error.message };
+  revalidatePath(`/groups/${groupId}`);
+  revalidatePath(`/groups/${groupId}/members`);
+  revalidatePath(`/groups/${groupId}/grid`);
+  revalidatePath("/groups");
+  revalidatePath("/alerts");
+  return { success: true };
+}
+
+export async function leaveGroupAction(groupId: string, memberId?: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const { error } = memberId
+    ? await supabase.rpc("leave_group_seat", { p_member_id: memberId })
+    : await supabase.rpc("leave_group", { p_group_id: groupId });
   if (error) return { error: error.message };
   revalidatePath("/groups");
   revalidatePath(`/groups/${groupId}`);
   revalidatePath(`/groups/${groupId}/members`);
   revalidatePath("/alerts");
+  if (user) {
+    const { data: remaining } = await supabase
+      .from("group_members")
+      .select("id")
+      .eq("group_id", groupId)
+      .eq("user_id", user.id)
+      .eq("status", "active");
+    if (remaining && remaining.length > 0) return { success: true };
+  }
   redirect("/groups");
 }
 

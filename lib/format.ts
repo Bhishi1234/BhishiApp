@@ -72,3 +72,28 @@ export function groupTypeHindi(type: string) {
   if (type === "loan") return "कर्ज भिशी";
   return "";
 }
+
+export function seatName(member: { display_name: string; hand_number?: number | null }) {
+  const hand = member.hand_number ?? 1;
+  return hand > 1 ? `${member.display_name} · hand ${hand}` : member.display_name;
+}
+
+export function formatDateTime(value: string | Date | null | undefined, locale: AppLocale | string = "en") {
+  if (!value) return "—";
+  const date = typeof value === "string" ? new Date(value) : value;
+  if (Number.isNaN(date.getTime())) return "—";
+  return new Intl.DateTimeFormat(dateLocale(parseLocale(locale)), {
+    day: "numeric",
+    month: "short",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(date);
+}
+
+export function toDateTimeLocal(value: string | null | undefined) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}

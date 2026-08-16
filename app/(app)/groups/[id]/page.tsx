@@ -12,7 +12,7 @@ import { Card } from "@/components/ui/card";
 import { PageHeader } from "@/components/layout/page-header";
 import { getMeetingState, winnersTimeline } from "@/lib/cycle";
 import { daysLate } from "@/lib/dates";
-import { formatDate, formatRupees, groupTypeHindi, groupTypeLabel } from "@/lib/format";
+import { formatDate, formatRupees, groupTypeHindi, groupTypeLabel, seatName } from "@/lib/format";
 import { getGroupBundle } from "@/lib/group-data";
 import { parseLocale, t } from "@/lib/i18n";
 
@@ -40,7 +40,7 @@ export default async function GroupDetailPage({
     return {
       memberId: member.id,
       contributionId: row?.id ?? "",
-      name: member.display_name,
+      name: seatName(member),
       phone: member.phone,
       claimed: Boolean(row?.member_claimed_at),
       lateDays: daysLate(current?.due_date ?? group.start_date),
@@ -53,13 +53,13 @@ export default async function GroupDetailPage({
   const organiserUpi = organiser?.upi_id;
   const joinedCount = members.filter((member) => member.user_id).length;
   const wonIds = new Set(payouts.map((row) => row.winner_member_id));
-  const eligibleNames = members.filter((member) => !wonIds.has(member.id)).map((member) => member.display_name);
-  const alreadyWonNames = members.filter((member) => wonIds.has(member.id)).map((member) => member.display_name);
+  const eligibleNames = members.filter((member) => !wonIds.has(member.id)).map((member) => seatName(member));
+  const alreadyWonNames = members.filter((member) => wonIds.has(member.id)).map((member) => seatName(member));
   const paidNames = members
     .filter((member) =>
       currentContributions.some((row) => row.member_id === member.id && row.status === "paid"),
     )
-    .map((member) => member.display_name);
+    .map((member) => seatName(member));
 
   return (
     <div className="px-5 py-6">
@@ -146,7 +146,7 @@ export default async function GroupDetailPage({
           isAdmin={isAdmin}
           canDraw={meeting.canDraw}
           drawn={Boolean(currentPayout)}
-          winnerName={winner?.display_name ?? null}
+          winnerName={winner ? seatName(winner) : null}
           payoutPending={currentPayout?.status === "pending"}
           cycleId={currentPayout?.cycle_id ?? current?.id ?? null}
           upiId={organiserUpi}
@@ -174,12 +174,15 @@ export default async function GroupDetailPage({
             </Link>
           </Button>
         ) : (
-          <Button asChild variant="secondary">
-            <Link href={`/groups/${id}/draw`}>{t(locale, "biddingSoon")}</Link>
+          <Button asChild>
+            <Link href={`/groups/${id}/draw`}>{t(locale, "biddingTitle")}</Link>
           </Button>
         )}
         <Button asChild variant="outline" className="col-span-2">
           <Link href={`/groups/${id}/me`}>{t(locale, "yourStatement")}</Link>
+        </Button>
+        <Button asChild variant="outline" className="col-span-2">
+          <Link href={`/groups/${id}/settlement`}>{t(locale, "settlement")}</Link>
         </Button>
         <div className="col-span-2">
           <MeetingSlipButton
@@ -192,7 +195,7 @@ export default async function GroupDetailPage({
             due={unpaid.map((row) => ({ name: row.name, lateDays: row.lateDays }))}
             eligible={eligibleNames}
             alreadyWon={alreadyWonNames}
-            winnerName={winner?.display_name ?? null}
+            winnerName={winner ? seatName(winner) : null}
           />
         </div>
         <Button asChild variant="outline" className="col-span-2">
@@ -209,7 +212,7 @@ export default async function GroupDetailPage({
             {timeline.map(({ cycle, winner: person }) => (
               <Card key={cycle.id} className="flex items-center justify-between px-4 py-3">
                 <div>
-                  <p className="font-semibold">{person?.display_name ?? t(locale, "members")}</p>
+                  <p className="font-semibold">{person ? seatName(person) : t(locale, "members")}</p>
                   <p className="text-sm text-muted-foreground">
                     {t(locale, "monthN", { n: cycle.cycle_number })} · {formatDate(cycle.due_date, locale)}
                   </p>

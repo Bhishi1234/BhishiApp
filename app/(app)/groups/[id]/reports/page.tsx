@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { PageHeader } from "@/components/layout/page-header";
-import { formatRupees } from "@/lib/format";
+import { formatRupees, seatName } from "@/lib/format";
 import { getGroupBundle } from "@/lib/group-data";
 import { parseLocale, t } from "@/lib/i18n";
 
@@ -50,7 +50,7 @@ export default async function ReportsPage({
           return (
             <Card key={member.id} className="p-4">
               <div className="flex items-center justify-between gap-3">
-                <p className="font-semibold">{member.display_name}</p>
+                <p className="font-semibold">{seatName(member)}</p>
                 {won ? (
                   <Badge className="bg-accent text-accent-foreground">{t(locale, "receivedPoolBadge")}</Badge>
                 ) : (

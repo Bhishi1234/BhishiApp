@@ -1,6 +1,7 @@
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
 import type {
   ActivityEvent,
+  Bid,
   Contribution,
   Cycle,
   Group,
@@ -45,7 +46,7 @@ export async function getGroupBundle(groupId: string) {
     { data: members },
     { data: cycles },
     { data: settings },
-    { data: myMembership },
+    { data: mySeatRows },
   ] = await Promise.all([
     supabase
       .from("group_members")
@@ -65,24 +66,31 @@ export async function getGroupBundle(groupId: string) {
       .eq("group_id", groupId)
       .eq("user_id", user.id)
       .eq("status", "active")
-      .maybeSingle(),
+      .order("hand_number"),
   ]);
 
   const cycleRows = (cycles ?? []) as Cycle[];
   const cycleIds = cycleRows.map((cycle) => cycle.id);
+  const mySeats = (mySeatRows ?? []) as GroupMember[];
+  const membership =
+    mySeats.find((seat) => seat.role === "admin") ??
+    mySeats.find((seat) => seat.role === "co_admin") ??
+    mySeats[0] ??
+    null;
+  const isAdmin = mySeats.some((seat) => seat.role === "admin" || seat.role === "co_admin");
+  const isOwner = mySeats.some((seat) => seat.role === "admin");
 
-  const [{ data: contributions }, { data: payouts }] = await Promise.all([
+  const [{ data: contributions }, { data: payouts }, { data: bids }] = await Promise.all([
     cycleIds.length
       ? supabase.from("contributions").select("*").in("cycle_id", cycleIds)
       : Promise.resolve({ data: [] }),
     cycleIds.length
       ? supabase.from("payouts").select("*").in("cycle_id", cycleIds)
       : Promise.resolve({ data: [] }),
+    cycleIds.length
+      ? supabase.from("bids").select("*").in("cycle_id", cycleIds).order("discount_amount")
+      : Promise.resolve({ data: [] }),
   ]);
-
-  const membership = myMembership as GroupMember | null;
-  const isAdmin = membership?.role === "admin" || membership?.role === "co_admin";
-  const isOwner = membership?.role === "admin";
 
   const { data: organiser } = await supabase
     .from("profiles")
@@ -99,7 +107,9 @@ export async function getGroupBundle(groupId: string) {
     cycles: cycleRows,
     contributions: (contributions ?? []) as Contribution[],
     payouts: (payouts ?? []) as Payout[],
+    bids: (bids ?? []) as Bid[],
     settings: (settings ?? null) as GroupSettings | null,
+    mySeats,
     membership,
     isAdmin,
     isOwner,

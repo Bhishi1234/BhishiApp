@@ -9,7 +9,7 @@ export default function NewGroupPage() {
         backLabel="Groups"
         kicker="नवीन भिशी"
         title="Create a group"
-        subtitle="Set hapta, members, and the group start date. The first chitthi opens one month later."
+        subtitle="Set hapta, how many hands, and the group start date. One person can play more than one hand."
       />
       <CreateWizard />
     </div>

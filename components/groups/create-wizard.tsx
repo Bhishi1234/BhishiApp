@@ -29,7 +29,7 @@ const types: {
     id: "bidding",
     title: "Bidding",
     hindi: "लिलाव भिशी",
-    description: "Members bid a discount. Lowest bid wins. Lilav screen comes after lucky-draw is solid.",
+    description: "Members bid a discount during an open window. Lowest bid wins. The rest is split equally among other hands.",
   },
   {
     id: "loan",
@@ -146,7 +146,7 @@ export function CreateWizard() {
         <div className="space-y-4">
           <h1 className="text-2xl font-bold">Members and meeting day</h1>
           <div className="space-y-2">
-            <Label htmlFor="count">How many members?</Label>
+            <Label htmlFor="count">How many hands?</Label>
             <Input
               id="count"
               inputMode="numeric"
@@ -154,8 +154,8 @@ export function CreateWizard() {
               onChange={(event) => setMemberCount(event.target.value.replace(/\D/g, ""))}
             />
             <p className="text-sm text-muted-foreground">
-              Members equal months. {countNumber || 10} people means {countNumber || 10} monthly
-              meetings — one chitthi each month, never two in the same month.
+              Hands equal months. {countNumber || 10} hands means {countNumber || 10} meetings.
+              One person can take two hands if they want to play a larger share.
             </p>
           </div>
           <div className="space-y-2">
@@ -198,8 +198,7 @@ export function CreateWizard() {
             <Card className="p-4 text-sm">
               Monthly pool:{" "}
               <strong>{formatRupees(amountNumber * countNumber)}</strong> when
-              all {countNumber} members have joined. The first chitthi opens one{" "}
-              {frequency === "weekly" ? "week" : "month"} after the start date.
+              all {countNumber} hands are filled. Someone can hold more than one hand.
             </Card>
           ) : null}
         </div>

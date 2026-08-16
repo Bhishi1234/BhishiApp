@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { PageHeader } from "@/components/layout/page-header";
 import { getMeetingState } from "@/lib/cycle";
-import { formatDate, formatRupees } from "@/lib/format";
+import { formatDate, formatRupees, seatName } from "@/lib/format";
 import { getGroupBundle } from "@/lib/group-data";
 import { parseLocale, t } from "@/lib/i18n";
 
@@ -17,7 +17,7 @@ export default async function GridPage({
   const bundle = await getGroupBundle(id);
   if (!bundle) notFound();
 
-  const { group, members, cycles, contributions, payouts, isAdmin, membership, settings, profile } =
+  const { group, members, cycles, contributions, payouts, isAdmin, settings, profile, mySeats } =
     bundle;
   const locale = parseLocale(profile?.locale);
   const meeting = getMeetingState(cycles, payouts, group.frequency);
@@ -67,7 +67,7 @@ export default async function GridPage({
           const rows = contributions.filter((row) => row.member_id === member.id);
           const paidCount = rows.filter((row) => row.status === "paid").length;
           const initial = member.display_name.trim().charAt(0).toUpperCase() || "M";
-          const canClaim = selfServe && membership?.id === member.id;
+          const canClaim = selfServe && mySeats.some((seat) => seat.id === member.id);
 
           return (
             <Card key={member.id} className="p-0">
@@ -76,7 +76,7 @@ export default async function GridPage({
                   {initial}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-semibold">{member.display_name}</p>
+                  <p className="truncate font-semibold">{seatName(member)}</p>
                   <p className="text-sm text-muted-foreground">
                     {t(locale, "monthsPaid", { paid: paidCount, total: cycles.length })}
                   </p>
@@ -93,7 +93,7 @@ export default async function GridPage({
                         groupId={group.id}
                         canEdit={isAdmin}
                         canClaim={canClaim}
-                        memberName={member.display_name}
+                        memberName={seatName(member)}
                         cycleNumber={cycle.cycle_number}
                         dueDate={cycle.due_date}
                         highlight={cycle.id === currentId}
